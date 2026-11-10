@@ -7,7 +7,7 @@ using UnityEngine;
 public static class ProjectTools
 {
     const string MainScenePath = "Assets/Scenes/Main.unity";
-    const string BuildPath = "Builds/Windows/DungeonCrawler.exe";
+    const string BuildPath = "Builds/Windows/DungeonTamheomga.exe";
 
     [MenuItem("Tools/Dungeon/Create Main Scene")]
     public static void CreateMainScene()
@@ -19,7 +19,7 @@ public static class ProjectTools
             EditorSceneManager.SaveScene(scene, MainScenePath);
         }
         EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(MainScenePath, true) };
-        PlayerSettings.productName = "Dungeon Crawler";
+        PlayerSettings.productName = "DungeonTamheomga";
         PlayerSettings.fullScreenMode = FullScreenMode.Windowed;
         PlayerSettings.defaultScreenWidth = 1280;
         PlayerSettings.defaultScreenHeight = 720;
