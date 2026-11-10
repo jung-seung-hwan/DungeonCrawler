@@ -48,14 +48,14 @@ public class Equipment
     public string Describe()
     {
         var parts = new List<string>();
-        if (Attack > 0) parts.Add($"공격 +{Attack}");
-        if (Defense > 0) parts.Add($"방어 +{Defense}");
-        if (MaxHp > 0) parts.Add($"체력 +{MaxHp}");
-        if (Crit > 0) parts.Add($"치명 +{Crit * 100:0}%");
-        if (Lifesteal > 0) parts.Add($"흡혈 {Lifesteal * 100:0}%");
-        if (Thorns > 0) parts.Add($"가시 {Thorns * 100:0}%");
-        if (Regen) parts.Add("재생");
-        if (GoldBonus > 0) parts.Add($"골드 +{GoldBonus * 100:0}%");
+        if (Attack > 0) parts.Add($"{Loc.T("공격", "ATK")} +{Attack}");
+        if (Defense > 0) parts.Add($"{Loc.T("방어", "DEF")} +{Defense}");
+        if (MaxHp > 0) parts.Add($"{Loc.T("체력", "HP")} +{MaxHp}");
+        if (Crit > 0) parts.Add($"{Loc.T("치명", "Crit")} +{Crit * 100:0}%");
+        if (Lifesteal > 0) parts.Add($"{Loc.T("흡혈", "Leech")} {Lifesteal * 100:0}%");
+        if (Thorns > 0) parts.Add($"{Loc.T("가시", "Thorns")} {Thorns * 100:0}%");
+        if (Regen) parts.Add(Loc.T("재생", "Regen"));
+        if (GoldBonus > 0) parts.Add($"{Loc.T("골드", "Gold")} +{GoldBonus * 100:0}%");
         return string.Join(", ", parts);
     }
 }
@@ -63,9 +63,22 @@ public class Equipment
 // 층 깊이에 맞는 장비를 무작위로 만든다.
 public static class EquipmentFactory
 {
-    static readonly string[] WeaponNames = { "녹슨 단검", "철검", "강철 장검", "미스릴 검", "룬 대검" };
-    static readonly string[] ArmorNames = { "가죽 갑옷", "사슬 갑옷", "강철 판금", "미스릴 갑옷", "용비늘 갑옷" };
-    static readonly string[] RingNames = { "구리 반지", "은 반지", "금 반지", "마력의 반지", "별빛 반지" };
+    // 장비 이름은 만들어질 때의 언어로 정해진다(언어는 런 도중에 바뀌지 않는다).
+    static readonly Txt[] WeaponNames =
+    {
+        new("녹슨 단검", "Rusty Dagger"), new("철검", "Iron Sword"), new("강철 장검", "Longsword"),
+        new("미스릴 검", "Mithril Sword"), new("룬 대검", "Runeblade"),
+    };
+    static readonly Txt[] ArmorNames =
+    {
+        new("가죽 갑옷", "Leather Armor"), new("사슬 갑옷", "Chain Mail"), new("강철 판금", "Steel Plate"),
+        new("미스릴 갑옷", "Mithril Mail"), new("용비늘 갑옷", "Dragon Mail"),
+    };
+    static readonly Txt[] RingNames =
+    {
+        new("구리 반지", "Copper Ring"), new("은 반지", "Silver Ring"), new("금 반지", "Gold Ring"),
+        new("마력의 반지", "Arcane Ring"), new("별빛 반지", "Starlight Ring"),
+    };
 
     static readonly Affix[] WeaponAffixes = { Affix.Power, Affix.Keen, Affix.Lifesteal };
     static readonly Affix[] ArmorAffixes = { Affix.Vitality, Affix.Thorns, Affix.Regen };
@@ -117,7 +130,7 @@ public static class EquipmentFactory
         }
 
         string prefix = first.HasValue ? AffixPrefix(first.Value) + " " : "";
-        eq.Name = rarity == Rarity.Legendary ? $"전설의 {prefix}{baseName}" : $"{prefix}{baseName}";
+        eq.Name = rarity == Rarity.Legendary ? $"{Loc.T("전설의", "Legendary")} {prefix}{baseName}" : $"{prefix}{baseName}";
         return eq;
     }
 
@@ -151,12 +164,12 @@ public static class EquipmentFactory
 
     static string AffixPrefix(Affix affix) => affix switch
     {
-        Affix.Power => "강력한",
-        Affix.Vitality => "활력의",
-        Affix.Keen => "예리한",
-        Affix.Lifesteal => "흡혈의",
-        Affix.Thorns => "가시 돋친",
-        Affix.Regen => "재생의",
-        _ => "행운의",
+        Affix.Power => Loc.T("강력한", "Mighty"),
+        Affix.Vitality => Loc.T("활력의", "Vital"),
+        Affix.Keen => Loc.T("예리한", "Keen"),
+        Affix.Lifesteal => Loc.T("흡혈의", "Vampiric"),
+        Affix.Thorns => Loc.T("가시 돋친", "Thorned"),
+        Affix.Regen => Loc.T("재생의", "Mending"),
+        _ => Loc.T("행운의", "Lucky"),
     };
 }

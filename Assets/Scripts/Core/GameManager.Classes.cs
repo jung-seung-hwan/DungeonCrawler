@@ -86,7 +86,7 @@ public partial class GameManager
 
     // 더 좋은 장비면 바로 착용하고 이전 장비는 판다. 아니면 새 장비를 판다.
     // forceEquip: 상점에서 직접 산 물건은 점수와 상관없이 착용한다.
-    void ReceiveEquipment(Equipment eq, string how, bool forceEquip = false)
+    void ReceiveEquipment(Equipment eq, bool bought, bool forceEquip = false)
     {
         var current = GetEquipped(eq.Slot);
         if (forceEquip || current == null || eq.Score > current.Score)
@@ -96,15 +96,17 @@ public partial class GameManager
             if (current != null)
             {
                 gold += current.SellValue;
-                sold = $" (이전 장비는 {current.SellValue}G에 팔았다)";
+                sold = Ko ? $" (이전 장비는 {current.SellValue}G에 팔았다)" : $" (old one sold for {current.SellValue}G)";
             }
-            Log($"{eq.ColoredName}{Josa(eq.Name, "을", "를")} {how} 장착했다! {eq.Describe()}{sold}");
+            Log(Ko ? $"{eq.ColoredName}{Josa(eq.Name, "을", "를")} {(bought ? "사서" : "주워")} 장착했다! {eq.Describe()}{sold}"
+                   : $"{(bought ? "Bought" : "Found")} and equipped {eq.ColoredName}! {eq.Describe()}{sold}");
             AddFloatingText(player.transform.position, eq.Name, eq.RarityColor);
         }
         else
         {
             gold += eq.SellValue;
-            Log($"{eq.ColoredName}{Josa(eq.Name, "은", "는")} 지금 장비보다 약해 {eq.SellValue}G에 팔았다.");
+            Log(Ko ? $"{eq.ColoredName}{Josa(eq.Name, "은", "는")} 지금 장비보다 약해 {eq.SellValue}G에 팔았다."
+                   : $"{eq.ColoredName} is weaker than your gear — sold for {eq.SellValue}G.");
         }
     }
 
@@ -125,6 +127,7 @@ public partial class GameManager
     {
         if (metaOpen) { HandleMetaInput(cmd); return; }
         if (cmd.Kind == CommandKind.Meta) { OpenMeta(); return; }
+        if (cmd.Kind == CommandKind.Language) { Loc.Toggle(); return; }
         if (cmd.Kind == CommandKind.UseItem && !cmd.FromPotionKey && cmd.Slot < GameData.Classes.Length)
             BeginRun(GameData.Classes[cmd.Slot].Id);
     }
@@ -139,7 +142,7 @@ public partial class GameManager
         skillCooldown = 0;
         stealthTurns = 0;
 
-        player.SetSprite(PixelArt.Get(playerClass.Name) ?? SpriteFactory.Player);
+        player.SetSprite(PixelArt.Get(playerClass.ArtKey) ?? SpriteFactory.Player);
         player.SetBaseColor(Color.white);
         player.MaxHp = player.Hp = baseMaxHp;
         RecalculateStats();
@@ -152,7 +155,8 @@ public partial class GameManager
     {
         if (!SkillReady)
         {
-            Log($"{playerClass.SkillName}{Josa(playerClass.SkillName, "은", "는")} {skillCooldown}턴 뒤에 쓸 수 있다.");
+            Log(Ko ? $"{playerClass.SkillName}{Josa(playerClass.SkillName, "은", "는")} {skillCooldown}턴 뒤에 쓸 수 있다."
+                   : $"{playerClass.SkillName} will be ready in {skillCooldown} {(skillCooldown == 1 ? "turn" : "turns")}.");
             return;
         }
 
@@ -171,9 +175,10 @@ public partial class GameManager
     bool Whirlwind()
     {
         var targets = enemies.Where(e => Pathfinder.Distance(e.Pos, player.Pos) == 1).ToList();
-        if (targets.Count == 0) { Log("주변에 적이 없다."); return false; }
+        if (targets.Count == 0) { Log(Ko ? "주변에 적이 없다." : "No enemies nearby."); return false; }
 
-        Log($"<color=#ffaa66>회전베기!</color> 주변의 적 {targets.Count}명을 벤다.");
+        Log(Ko ? $"<color=#ffaa66>회전베기!</color> 주변의 적 {targets.Count}명을 벤다."
+               : $"<color=#ffaa66>Whirlwind!</color> You slash {targets.Count} nearby {(targets.Count == 1 ? "enemy" : "enemies")}.");
         Play(Sfx.Crit);
         Shake(0.2f, 0.15f);
         Effects.Whirl(player.transform.position, playerClass.Color);
@@ -188,7 +193,8 @@ public partial class GameManager
         foreach (var enemy in enemies) enemy.LastKnownTarget = null;
         player.SetAlpha(0.35f);
         Play(Sfx.Magic);
-        Log("<color=#99ff99>그림자 속으로 숨었다!</color> 적들이 당신을 놓쳤다.");
+        Log(Ko ? "<color=#99ff99>그림자 속으로 숨었다!</color> 적들이 당신을 놓쳤다."
+               : "<color=#99ff99>You slip into the shadows!</color> The enemies lose track of you.");
         return true;
     }
 
@@ -196,7 +202,7 @@ public partial class GameManager
     {
         var targets = enemies.Where(e => map.IsVisible(e.Pos))
             .OrderBy(e => Pathfinder.Distance(e.Pos, player.Pos)).Take(2).ToList();
-        if (targets.Count == 0) { Log("보이는 적이 없다."); return false; }
+        if (targets.Count == 0) { Log(Ko ? "보이는 적이 없다." : "No enemies in sight."); return false; }
 
         int damage = 3 + level + depth;
         Play(Sfx.Magic);
@@ -205,7 +211,8 @@ public partial class GameManager
         {
             if (!enemies.Contains(target)) continue; // 첫 화살에 주인이 죽어 함께 사라진 부하
             Projectile.Spawn(player.Pos, target.Pos, new Color(0.7f, 0.6f, 1f), 1.1f);
-            Log($"<color=#bb99ff>마법 화살!</color> {target.DisplayName}에게 {damage} 피해!");
+            Log(Ko ? $"<color=#bb99ff>마법 화살!</color> {target.DisplayName}에게 {damage} 피해!"
+                   : $"<color=#bb99ff>Magic Missile!</color> {damage} damage to the {target.DisplayName}!");
             DealDamage(target, damage, "마법 화살");
         }
         return true;
@@ -218,7 +225,7 @@ public partial class GameManager
         if (stealthTurns > 0)
         {
             stealthTurns--;
-            if (stealthTurns == 0) BreakStealth("그림자에서 모습을 드러냈다.");
+            if (stealthTurns == 0) BreakStealth(Ko ? "그림자에서 모습을 드러냈다." : "You step out of the shadows.");
         }
     }
 

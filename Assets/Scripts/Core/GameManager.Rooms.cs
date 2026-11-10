@@ -100,9 +100,12 @@ public partial class GameManager
 
             string message = roomKinds[i] switch
             {
-                RoomKind.Shop => "<color=#ffd966>상인을 발견했다! 부딪히면 거래할 수 있다.</color>",
-                RoomKind.Treasure => "<color=#ffd966>보물 창고다! 하지만 지키는 몬스터가 많다...</color>",
-                RoomKind.Shrine => "<color=#99ddff>신비한 제단이 빛나고 있다. 올라서면 무슨 일이 일어날까?</color>",
+                RoomKind.Shop => Ko ? "<color=#ffd966>상인을 발견했다! 부딪히면 거래할 수 있다.</color>"
+                                    : "<color=#ffd966>You spot a merchant! Walk into them to trade.</color>",
+                RoomKind.Treasure => Ko ? "<color=#ffd966>보물 창고다! 하지만 지키는 몬스터가 많다...</color>"
+                                        : "<color=#ffd966>A treasure vault! But it is heavily guarded...</color>",
+                RoomKind.Shrine => Ko ? "<color=#99ddff>신비한 제단이 빛나고 있다. 올라서면 무슨 일이 일어날까?</color>"
+                                      : "<color=#99ddff>A mysterious altar glows. What will happen if you step on it?</color>",
                 _ => null,
             };
             if (message == null) continue;
@@ -123,7 +126,8 @@ public partial class GameManager
         double roll = rng.NextDouble();
         if (roll < 0.15)
         {
-            Log("<color=#ff7777>제단이 분노했다! 어둠 속에서 몬스터가 솟아난다!</color>");
+            Log(Ko ? "<color=#ff7777>제단이 분노했다! 어둠 속에서 몬스터가 솟아난다!</color>"
+                   : "<color=#ff7777>The altar is angered! Monsters rise from the darkness!</color>");
             Shake(0.3f, 0.2f);
             int spawned = 0;
             foreach (var dir in Pathfinder.Directions8)
@@ -138,26 +142,26 @@ public partial class GameManager
         else if (roll < 0.4)
         {
             player.Hp = player.MaxHp;
-            AddFloatingText(player.transform.position, "체력 회복", new Color(0.4f, 1f, 0.4f));
-            Log("따뜻한 빛이 온몸을 감싼다. 체력이 모두 회복됐다!");
+            AddFloatingText(player.transform.position, Ko ? "체력 회복" : "Healed", new Color(0.4f, 1f, 0.4f));
+            Log(Ko ? "따뜻한 빛이 온몸을 감싼다. 체력이 모두 회복됐다!" : "A warm light surrounds you. You are fully healed!");
         }
         else if (roll < 0.6)
         {
             AddBaseStats(maxHp: 8);
-            AddFloatingText(player.transform.position, "최대 체력 +8", new Color(0.4f, 1f, 0.4f));
-            Log("생명력이 강해졌다! 최대 체력 +8");
+            AddFloatingText(player.transform.position, Ko ? "최대 체력 +8" : "Max HP +8", new Color(0.4f, 1f, 0.4f));
+            Log(Ko ? "생명력이 강해졌다! 최대 체력 +8" : "Your life force grows stronger! Max HP +8");
         }
         else if (roll < 0.8)
         {
             AddBaseStats(attack: 2);
-            AddFloatingText(player.transform.position, "공격 +2", new Color(1f, 0.8f, 0.4f));
-            Log("힘이 솟구친다! 공격력 +2");
+            AddFloatingText(player.transform.position, Ko ? "공격 +2" : "ATK +2", new Color(1f, 0.8f, 0.4f));
+            Log(Ko ? "힘이 솟구친다! 공격력 +2" : "Strength surges through you! Attack +2");
         }
         else
         {
             AddBaseStats(defense: 1);
-            AddFloatingText(player.transform.position, "방어 +1", new Color(0.5f, 0.7f, 1f));
-            Log("피부가 바위처럼 단단해졌다! 방어력 +1");
+            AddFloatingText(player.transform.position, Ko ? "방어 +1" : "DEF +1", new Color(0.5f, 0.7f, 1f));
+            Log(Ko ? "피부가 바위처럼 단단해졌다! 방어력 +1" : "Your skin hardens like stone! Defense +1");
         }
     }
 
@@ -198,19 +202,21 @@ public partial class GameManager
         switch (trap.Kind)
         {
             case TrapKind.Spike:
-                Log($"<color=#ff7777>{name}{Josa(name, "을", "를")} 밟았다!</color>");
-                DealDamage(player, 3 + depth, name);
+                Log(Ko ? $"<color=#ff7777>{name}{Josa(name, "을", "를")} 밟았다!</color>" : $"<color=#ff7777>You step on {Loc.A(name)}!</color>");
+                DealDamage(player, 3 + depth, Ko ? name : Loc.A(name));
                 break;
 
             case TrapKind.Alarm:
-                Log("<color=#ffcc44>경보 함정! 요란한 종소리가 던전에 울려 퍼진다!</color>");
+                Log(Ko ? "<color=#ffcc44>경보 함정! 요란한 종소리가 던전에 울려 퍼진다!</color>"
+                       : "<color=#ffcc44>An alarm trap! A loud bell rings through the dungeon!</color>");
                 foreach (var enemy in enemies) enemy.LastKnownTarget = player.Pos;
                 Play(Sfx.Shoot);
                 Shake(0.25f, 0.15f);
                 break;
 
             case TrapKind.Teleport:
-                Log("<color=#bb99ff>발밑의 마법진이 빛난다! 순간이동 함정이다!</color>");
+                Log(Ko ? "<color=#bb99ff>발밑의 마법진이 빛난다! 순간이동 함정이다!</color>"
+                       : "<color=#bb99ff>The rune under your feet glows! A teleport trap!</color>");
                 Teleport();
                 break;
         }
@@ -225,7 +231,7 @@ public partial class GameManager
             if (trap.Revealed || Pathfinder.Distance(pos, player.Pos) != 1 || rng.NextDouble() >= chance) continue;
             trap.Revealed = true;
             string name = GameData.TrapName(trap.Kind);
-            Log($"{name}{Josa(name, "을", "를")} 발견했다!");
+            Log(Ko ? $"{name}{Josa(name, "을", "를")} 발견했다!" : $"You spot {Loc.A(name)}!");
             input.CancelRepeat();
         }
     }

@@ -14,6 +14,7 @@ public partial class GameManager
     string metaMessage;
 
     static int SoulStones => PlayerPrefs.GetInt(SoulStonesKey, 0);
+    static string SoulStoneLabel => Ko ? "영혼석" : "Soul Stones";
 
     static int MetaLevel(MetaUpgradeDef def) =>
         Mathf.Clamp(PlayerPrefs.GetInt(MetaLevelKeyPrefix + def.Id, 0), 0, def.MaxLevel);
@@ -66,20 +67,22 @@ public partial class GameManager
         int current = MetaLevel(def);
         if (current >= def.MaxLevel)
         {
-            metaMessage = $"{def.Name}{Josa(def.Name, "은", "는")} 이미 최대 단계다.";
+            metaMessage = Ko ? $"{def.Name}{Josa(def.Name, "은", "는")} 이미 최대 단계다." : $"{def.Name} is already at its maximum level.";
             return;
         }
         int cost = def.CostFor(current);
         if (SoulStones < cost)
         {
-            metaMessage = $"<color=#ff8888>영혼석이 부족하다. ({cost}개 필요)</color>";
+            metaMessage = Ko ? $"<color=#ff8888>영혼석이 부족하다. ({cost}개 필요)</color>"
+                             : $"<color=#ff8888>Not enough Soul Stones. ({cost} needed)</color>";
             return;
         }
         PlayerPrefs.SetInt(SoulStonesKey, SoulStones - cost);
         PlayerPrefs.SetInt(MetaLevelKeyPrefix + def.Id, current + 1);
         PlayerPrefs.Save();
         Play(Sfx.LevelUp);
-        metaMessage = $"<color=#88ff88>{def.Name} {current + 1}단계 강화 완료!</color>";
+        metaMessage = Ko ? $"<color=#88ff88>{def.Name} {current + 1}단계 강화 완료!</color>"
+                         : $"<color=#88ff88>{def.Name} upgraded to level {current + 1}!</color>";
     }
 
     void DrawMeta(float w, float h)
@@ -92,8 +95,8 @@ public partial class GameManager
 
         DrawRect(new Rect(x, y, pw, ph), new Color(0.08f, 0.08f, 0.12f, 0.98f));
         DrawRect(new Rect(x, y, pw, 4), new Color(0.6f, 0.85f, 1f));
-        GUI.Label(new Rect(x + 24, y + 16, 300, 34), "<b>영구 강화</b>", new GUIStyle(textStyle) { fontSize = 26 });
-        GUI.Label(new Rect(x + pw - 244, y + 20, 220, 30), $"<color=#99ddff>영혼석 {SoulStones}</color>",
+        GUI.Label(new Rect(x + 24, y + 16, 300, 34), Ko ? "<b>영구 강화</b>" : "<b>Permanent Upgrades</b>", new GUIStyle(textStyle) { fontSize = 26 });
+        GUI.Label(new Rect(x + pw - 244, y + 20, 220, 30), $"<color=#99ddff>{SoulStoneLabel} {SoulStones}</color>",
             new GUIStyle(textStyle) { alignment = TextAnchor.MiddleRight });
 
         var small = new GUIStyle(textStyle) { fontSize = 15 };
@@ -111,15 +114,16 @@ public partial class GameManager
             GUI.Label(new Rect(x + 24, ry + 30, 440, 24),
                 $"<color=#aaaaaa>{def.Describe(current)}</color>", small);
 
-            string price = maxed ? "<color=#888888>최대</color>"
-                : SoulStones >= def.CostFor(current) ? $"<color=#99ddff>영혼석 {def.CostFor(current)}</color>"
-                : $"<color=#886666>영혼석 {def.CostFor(current)}</color>";
+            string price = maxed ? $"<color=#888888>{(Ko ? "최대" : "MAX")}</color>"
+                : SoulStones >= def.CostFor(current) ? $"<color=#99ddff>{SoulStoneLabel} {def.CostFor(current)}</color>"
+                : $"<color=#886666>{SoulStoneLabel} {def.CostFor(current)}</color>";
             GUI.Label(new Rect(x + pw - 184, ry + 14, 160, 28), price, new GUIStyle(textStyle) { alignment = TextAnchor.MiddleRight });
         }
 
         float fy = y + 66 + defs.Length * rowH;
         if (metaMessage != null) GUI.Label(new Rect(x + 24, fy + 6, pw - 48, 26), metaMessage, textStyle);
         GUI.Label(new Rect(x + 24, fy + 38, pw - 48, 26),
-            "<color=#888888>W · S  선택     Enter · Space  강화     Esc · U  닫기</color>", small);
+            Ko ? "<color=#888888>W · S  선택     Enter · Space  강화     Esc · U  닫기</color>"
+               : "<color=#888888>W · S  Select     Enter · Space  Upgrade     Esc · U  Close</color>", small);
     }
 }

@@ -41,33 +41,34 @@ public partial class GameManager
 
         if (item.Kind == ItemKind.Equipment)
         {
-            ReceiveEquipment(item.Equipment, "주워");
+            ReceiveEquipment(item.Equipment, bought: false);
             Play(Sfx.Pickup);
         }
         else
         {
-            GainItem(item.Kind, item.Amount, "주웠다");
+            GainItem(item.Kind, item.Amount, bought: false);
         }
         items.Remove(item);
         Destroy(item.gameObject);
     }
 
-    // 주운 아이템과 상점에서 산 아이템을 똑같이 처리한다. how: "주웠다" / "샀다"
-    void GainItem(ItemKind kind, int amount, string how)
+    // 주운 아이템과 상점에서 산 아이템을 똑같이 처리한다.
+    void GainItem(ItemKind kind, int amount, bool bought)
     {
         switch (kind)
         {
             case ItemKind.Gold:
                 amount = Mathf.RoundToInt(amount * (1f + GoldBonus));
                 gold += amount;
-                Log($"금화 {amount}개를 {how}.");
+                Log(Ko ? $"금화 {amount}개를 주웠다." : $"You pick up {amount} gold.");
                 AddFloatingText(player.transform.position, $"+{amount}G", new Color(1f, 0.85f, 0.25f));
                 break;
             default:
                 inventory[kind] = Count(kind) + amount;
                 int slot = System.Array.IndexOf(GameData.Consumables, kind) + 1;
                 string name = GameData.ItemName(kind);
-                Log($"{name}{Josa(name, "을", "를")} {how}. ({slot} 키로 사용)");
+                Log(Ko ? $"{name}{Josa(name, "을", "를")} {(bought ? "샀다" : "주웠다")}. ({slot} 키로 사용)"
+                       : $"{(bought ? "Bought" : "Picked up")} {Loc.A(name)}. (Press {slot} to use)");
                 break;
         }
         Play(Sfx.Pickup);
@@ -78,7 +79,7 @@ public partial class GameManager
         string name = GameData.ItemName(kind);
         if (Count(kind) <= 0)
         {
-            Log($"{name}{Josa(name, "이", "가")} 없다.");
+            Log(Ko ? $"{name}{Josa(name, "이", "가")} 없다." : $"You have no {name}.");
             return;
         }
 
@@ -98,11 +99,11 @@ public partial class GameManager
 
     bool DrinkPotion()
     {
-        if (player.Hp >= player.MaxHp) { Log("체력이 이미 가득하다."); return false; }
+        if (player.Hp >= player.MaxHp) { Log(Ko ? "체력이 이미 가득하다." : "You are already at full health."); return false; }
         int healed = Mathf.Min(Mathf.Max(12, player.MaxHp * 2 / 5), player.MaxHp - player.Hp);        player.Hp += healed;
         Play(Sfx.Magic);
         AddFloatingText(player.transform.position, $"+{healed}", new Color(0.4f, 1f, 0.4f));
-        Log($"물약을 마셨다. 체력 +{healed}");
+        Log(Ko ? $"물약을 마셨다. 체력 +{healed}" : $"You drink the potion. HP +{healed}");
         return true;
     }
 
@@ -116,14 +117,15 @@ public partial class GameManager
             if (target == null || Pathfinder.Distance(player.Pos, enemy.Pos) < Pathfinder.Distance(player.Pos, target.Pos))
                 target = enemy;
         }
-        if (target == null) { Log("보이는 적이 없다."); return false; }
+        if (target == null) { Log(Ko ? "보이는 적이 없다." : "No enemies in sight."); return false; }
 
         int damage = Mathf.RoundToInt((10 + depth * 2 + level) * ScrollPower);
         player.PlayAttack(target.Pos, 0.15f);
         Projectile.Spawn(player.Pos, target.Pos, new Color(1f, 0.5f, 0.15f), 1.5f);
         Play(Sfx.Fire);
         Shake(0.2f, 0.15f);
-        Log($"<color=#ff9944>화염구!</color> {target.DisplayName}에게 {damage} 피해!");
+        Log(Ko ? $"<color=#ff9944>화염구!</color> {target.DisplayName}에게 {damage} 피해!"
+               : $"<color=#ff9944>Fireball!</color> {damage} damage to the {target.DisplayName}!");
 
         var center = target.Pos;
         var splashed = enemies.FindAll(e => e != target && Pathfinder.Distance(e.Pos, center) == 1);
@@ -144,11 +146,11 @@ public partial class GameManager
             player.SetPos(cell, snap: true);
             cam.transform.position = new Vector3(cell.x, cell.y, -10f);
             Play(Sfx.Magic);
-            Log("몸이 빛에 휩싸이더니 다른 곳으로 이동했다!");
+            Log(Ko ? "몸이 빛에 휩싸이더니 다른 곳으로 이동했다!" : "Light engulfs you and carries you somewhere else!");
             PickUpItemAt(cell);
             return true;
         }
-        Log("마법이 실패했다.");
+        Log(Ko ? "마법이 실패했다." : "The spell fizzles.");
         return false;
     }
 
@@ -158,7 +160,7 @@ public partial class GameManager
         RevealAllTraps();
         RefreshTraps();
         Play(Sfx.Magic);
-        Log("이 층의 지도가 머릿속에 그려진다. 함정 위치도 보인다!");
+        Log(Ko ? "이 층의 지도가 머릿속에 그려진다. 함정 위치도 보인다!" : "A map of this floor forms in your mind. Traps are revealed too!");
         RebuildMinimap();
         return true;
     }
