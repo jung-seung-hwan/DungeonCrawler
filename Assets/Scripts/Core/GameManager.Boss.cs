@@ -24,17 +24,23 @@ public partial class GameManager
         }
 
         // 체력 2/3, 1/3 지점에서 부하를 부른다.
-        if (t.PhaseSummon != null)
+        if (t.PhaseSummon != null || t.SummonsShades)
         {
             int phase = boss.Hp < boss.MaxHp / 3 ? 2 : boss.Hp < boss.MaxHp * 2 / 3 ? 1 : 0;
             if (phase > boss.SummonPhase)
             {
-                int count = SpawnMinions(boss, GameData.EnemyNamed(t.PhaseSummon), 2, Mathf.Max(1, depth - 2));
+                int count = t.SummonsShades
+                    ? SpawnShades(boss, phase)
+                    : SpawnMinions(boss, GameData.EnemyNamed(t.PhaseSummon), 2, Mathf.Max(1, depth - 2));
                 if (count > 0) // 빈칸이 없어 실패하면 다음 행동 때 다시 시도한다.
                 {
                     boss.SummonPhase = phase;
-                    Log(Ko ? $"<color=#ffcc44>{boss.DisplayName}{Josa(boss.DisplayName, "이", "가")} 부하들을 불러 모은다!</color>"
-                           : $"<color=#ffcc44>The {boss.DisplayName} calls its minions!</color>");
+                    if (t.SummonsShades)
+                        Log(Ko ? $"<color=#c58cff>{boss.DisplayName}{Josa(boss.DisplayName, "이", "가")} 쓰러진 보스들의 그림자를 불러낸다!</color>"
+                               : $"<color=#c58cff>The {boss.DisplayName} calls up the shades of fallen bosses!</color>");
+                    else
+                        Log(Ko ? $"<color=#ffcc44>{boss.DisplayName}{Josa(boss.DisplayName, "이", "가")} 부하들을 불러 모은다!</color>"
+                               : $"<color=#ffcc44>The {boss.DisplayName} calls its minions!</color>");
                     Shake(0.25f, 0.15f);
                     return true;
                 }
@@ -135,6 +141,41 @@ public partial class GameManager
             AddFloatingText(player.transform.position, Ko ? "회피!" : "Dodge!", new Color(0.6f, 1f, 1f));
             Play(Sfx.Dodge);
         }
+    }
+
+    // 최종 보스의 소환: 1단계는 고블린 왕·오우거 족장, 2단계는 리치·심연의 용의 그림자.
+    // 그림자는 보스 패턴 없이 일반 몬스터처럼 싸우는 축소판이고, 주인이 쓰러지면 함께 사라진다.
+    int SpawnShades(Actor master, int phase)
+    {
+        var (hp, attack, defense) = GameData.ShadeStats(depth);
+        var cells = Pathfinder.Directions8.Select(d => master.Pos + d)
+            .Concat(Pathfinder.Directions8.Select(d => master.Pos + d * 2))
+            .Where(c => map.IsWalkable(c) && !IsOccupied(c)).ToList();
+        int first = (phase - 1) * 2 % GameData.Bosses.Length;
+        int spawned = 0;
+
+        for (int i = 0; i < 2 && spawned < cells.Count; i++)
+        {
+            var t = GameData.Bosses[(first + i) % GameData.Bosses.Length];
+            var cell = cells[spawned];
+            var shade = Actor.FromTemplate(t, t.MinDepth, floorRoot);
+            shade.DisplayName = Ko ? $"{t.Name}의 그림자" : $"Shade of the {t.NameEn}";
+            shade.MaxHp = shade.Hp = hp;
+            shade.Attack = attack;
+            shade.Defense = defense;
+            shade.XpReward = Mathf.Max(1, GameData.EnemyXp(GameData.Skeleton, depth) / 3);
+            shade.Master = master;
+            shade.LastKnownTarget = IsHidden ? null : player.Pos;
+            shade.transform.localScale = Vector3.one * t.Scale * 0.6f;
+            shade.SetBaseColor(new Color(0.6f, 0.45f, 0.95f));
+            shade.transform.position = master.transform.position;
+            shade.SetPos(cell);
+            shade.SetVisible(map.IsVisible(cell));
+            enemies.Add(shade);
+            spawned++;
+        }
+        if (spawned > 0) Play(Sfx.Summon);
+        return spawned;
     }
 
     // 주인 주변 빈칸에 부하를 소환한다. 실제로 소환한 수를 돌려준다.

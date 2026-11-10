@@ -208,7 +208,7 @@ public partial class GameManager
             .OrderBy(e => Pathfinder.Distance(e.Pos, player.Pos)).Take(2).ToList();
         if (targets.Count == 0) { Log(Ko ? "보이는 적이 없다." : "No enemies in sight."); Play(Sfx.Deny); return false; }
 
-        int damage = 3 + level + depth;
+        int damage = GameData.MagicMissileDamage(level, depth, player.Attack);
         Play(Sfx.Magic);
         player.PlayAttack(targets[0].Pos, 0.15f);
         foreach (var target in targets)

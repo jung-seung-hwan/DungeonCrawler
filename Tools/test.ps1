@@ -1,15 +1,18 @@
 # 빌드된 게임을 자동 플레이 모드로 실행한다.
 #   .\test.ps1 shot [-StartDepth 5]             봇 플레이 스크린샷을 Builds\shot_*.png 로 저장
 #   .\test.ps1 sim [-Count 30] [-StartDepth 1]  화면 없이 여러 판을 돌려 밸런스 통계 출력
+#   .\test.ps1 sim -StartDepth 50 -BossOnly     보스 층의 다른 몬스터를 치우고 보스전 승률만 확인 (shot에도 사용 가능)
 param(
     [ValidateSet("shot", "sim")] [string]$Mode = "shot",
     [int]$Count = 30,
     [int]$StartDepth = 1,
-    [ValidateSet("", "ko", "en")] [string]$Lang = ""   # 언어 고정(저장된 선택은 바꾸지 않음). shot은 Builds\shot_<언어>_*.png 로 저장
+    [ValidateSet("", "ko", "en")] [string]$Lang = "",  # 언어 고정(저장된 선택은 바꾸지 않음). shot은 Builds\shot_<언어>_*.png 로 저장
+    [switch]$BossOnly                                  # -StartDepth <보스 층>과 함께: 그 층의 다른 몬스터를 치우고 보스전만 본다
 )
 $project = Split-Path $PSScriptRoot -Parent
 $exe = Join-Path $project "Builds\Windows\DungeonCrawler.exe"
 $depthArgs = if ($StartDepth -gt 1) { "-startdepth $StartDepth" } else { "" }
+if ($BossOnly) { $depthArgs += " -bossonly" }
 $langArgs = if ($Lang) { "-lang $Lang" } else { "" }
 
 if ($Mode -eq "shot") {

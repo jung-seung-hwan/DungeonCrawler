@@ -186,6 +186,8 @@ public partial class GameManager : MonoBehaviour
         return false;
     }
 
+    static float SpawnWeight(EnemyTemplate t, int atDepth) => 1f / (1 + (atDepth - t.MinDepth) * 0.35f);
+
     Actor SpawnEnemy(Vector2Int pos)
     {
         // 출현 가능한 몬스터 중 최근에 등장한 종류일수록 자주 나온다.
@@ -195,7 +197,7 @@ public partial class GameManager : MonoBehaviour
         {
             if (t.MinDepth > depth) continue;
             candidates.Add(t);
-            weights.Add(1f / (1 + (depth - t.MinDepth) * 0.35f));
+            weights.Add(SpawnWeight(t, depth));
         }
         float roll = (float)rng.NextDouble() * weights.Sum();
         int index = 0;
@@ -210,16 +212,20 @@ public partial class GameManager : MonoBehaviour
     // 보스는 계단이 있는 마지막 방에서 계단을 지키고 있다.
     void SpawnBoss()
     {
-        int tier = depth / GameData.BossFloorInterval - 1;
-        var template = GameData.Bosses[Mathf.Min(tier, GameData.Bosses.Length - 1)];
-        boss = Actor.FromTemplate(template, depth, floorRoot);
+        // 어느 보스가 어떤 능력치로 나올지는 GameData.BossFor가 정한다(반복 회차는 색이 바뀌고 더 강하다).
+        var spec = GameData.BossFor(depth);
+        boss = Actor.FromTemplate(spec.Template, spec.Template.MinDepth, floorRoot);
         boss.IsBoss = true;
-
-        // 보스 목록을 다 돌면 같은 보스가 회차마다 더 강해진다.
-        int extraTiers = Mathf.Max(0, tier - (GameData.Bosses.Length - 1));
-        boss.MaxHp = boss.Hp = boss.MaxHp + extraTiers * 40;
-        boss.Attack += extraTiers * 3;
-        boss.Defense += extraTiers;
+        boss.DisplayName = spec.DisplayName;
+        boss.MaxHp = boss.Hp = spec.Hp;
+        boss.Attack = spec.Attack;
+        boss.Defense = spec.Defense;
+        boss.XpReward = spec.Xp;
+        if (spec.Round > 0)
+        {
+            var recolored = PixelArt.Get(spec.Template.Name, GameData.VariantHue(spec.Round));
+            if (recolored != null) boss.SetSprite(recolored);
+        }
 
         var bossRoom = rooms[^1];
         var pos = stairsPos;
@@ -234,7 +240,10 @@ public partial class GameManager : MonoBehaviour
         }
         boss.SetPos(pos, snap: true);
         enemies.Add(boss);
-        Log(Ko ? "강력한 기운이 느껴진다... 계단이 봉인되어 있다." : "You sense a powerful presence... The stairs are sealed.");
+        Log(spec.IsFinal
+            ? (Ko ? "<color=#c58cff>공허가 숨을 쉰다... 이 층의 주인이 계단을 봉인하고 있다.</color>"
+                  : "<color=#c58cff>The void is breathing... The master of this floor has sealed the stairs.</color>")
+            : (Ko ? "강력한 기운이 느껴진다... 계단이 봉인되어 있다." : "You sense a powerful presence... The stairs are sealed."));
     }
 
     // ───────────────────────── 보조 함수 ─────────────────────────

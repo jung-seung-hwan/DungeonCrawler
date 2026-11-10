@@ -15,13 +15,26 @@ public static class PixelArt
 
     public static IEnumerable<string> Names => Defs.Keys;
 
-    public static Sprite Get(string name)
+    // hueShift(도)를 주면 외곽선을 뺀 모든 색의 색조를 그만큼 돌린 그림을 만든다(반복 등장하는 보스의 색 변형).
+    public static Sprite Get(string name, float hueShift = 0f)
     {
-        if (cache.TryGetValue(name, out var sprite)) return sprite;
+        string key = hueShift == 0f ? name : $"{name}#{hueShift:0}";
+        if (cache.TryGetValue(key, out var sprite)) return sprite;
         if (!Defs.TryGetValue(name, out var def)) return null;
-        sprite = Build(name, def.rows, def.palette);
-        cache[name] = sprite;
+        sprite = Build(key, def.rows, hueShift == 0f ? def.palette : Shifted(def.palette, hueShift));
+        cache[key] = sprite;
         return sprite;
+    }
+
+    static Dictionary<char, Color> Shifted(Dictionary<char, Color> palette, float degrees)
+    {
+        var shifted = new Dictionary<char, Color>();
+        foreach (var (key, color) in palette)
+        {
+            Color.RGBToHSV(color, out float h, out float s, out float v);
+            shifted[key] = Color.HSVToRGB(Mathf.Repeat(h + degrees / 360f, 1f), s, v);
+        }
+        return shifted;
     }
 
     static Sprite Build(string name, string[] rows, Dictionary<char, Color> palette)
@@ -403,5 +416,26 @@ public static class PixelArt
             ".k..kkkk.kkkk...",
             "................",
         }, P(('d', "#d84080"), ('D', "#8a2050"), ('w', "#9a3060"), ('b', "#ffc090"), ('e', "#ffe030"), ('t', "#ffffff"))),
+
+        // 최종 보스: 보랏빛 왕관을 쓴 검은 형체. 얼굴은 텅 빈 어둠이고 가슴에 공허의 핵이 빛난다.
+        ["공허의 군주"] = (new[]
+        {
+            "....kvkvkvk.....",
+            "....kvvVvvk.....",
+            "...kkkkkkkkk....",
+            "..kdddddddddk...",
+            "..kddkkkkkddk.k.",
+            "..kdkekkekdk.kvk",
+            "..kddkkkkddkkvVk",
+            "..kkdddddddk.kvk",
+            ".kdDdddvdddDk.k.",
+            "kddDddvVvddDdkk.",
+            "kdkDdddvdddDkdk.",
+            "kk.kDdddddDk.kk.",
+            "...kDdddddDk....",
+            "..kDDdddddDDk...",
+            ".kDDDdddddDDDk..",
+            ".kkkkkkkkkkkkk..",
+        }, P(('d', "#4a3a78"), ('D', "#2c2050"), ('v', "#a855ff"), ('V', "#f0d0ff"), ('e', "#ff66ff"))),
     };
 }

@@ -391,12 +391,20 @@ public partial class GameManager
         int columns = Mathf.Max(1, (int)(w / cell));
         int i = 0;
         var label = new GUIStyle(textStyle) { fontSize = 15, alignment = TextAnchor.UpperCenter };
-        foreach (var name in PixelArt.Names)
+        var entries = new List<(string label, Sprite sprite)>();
+        foreach (var name in PixelArt.Names) entries.Add((name, PixelArt.Get(name)));
+        // 반복 등장하는 보스의 색 변형(25~45층, 100층 최종 보스)도 함께 보여준다.
+        foreach (int floor in new[] { 25, 30, 35, 40, 45, 55, 60, 65, 100 })
+        {
+            var spec = GameData.BossFor(floor);
+            entries.Add(($"{floor}: {spec.DisplayName}", PixelArt.Get(spec.Template.Name, GameData.VariantHue(spec.Round))));
+        }
+        foreach (var (text, sprite) in entries)
         {
             float x = (i % columns) * cell + (cell - size) / 2, y = (i / columns) * (cell + 10) + 20;
             DrawRect(new Rect(x - 4, y - 4, size + 8, size + 8), new Color(0.2f, 0.2f, 0.26f));
-            DrawSprite(PixelArt.Get(name), new Rect(x, y, size, size));
-            GUI.Label(new Rect(x - 30, y + size + 6, size + 60, 24), name, label);
+            DrawSprite(sprite, new Rect(x, y, size, size));
+            FitLabel(new Rect(x - 26, y + size + 6, size + 52, 24), text, label);
             i++;
         }
     }

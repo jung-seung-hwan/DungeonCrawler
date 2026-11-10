@@ -73,7 +73,9 @@ public partial class GameManager
             showHelp = false;
         }
         Play(Sfx.Stairs);
-        Log(IsBossFloor
+        Log(GameData.IsFinalBossFloor(depth)
+            ? (Ko ? $"<color=#c58cff>지하 {depth}층 — 공허의 군주가 기다리는 층이다!</color>" : $"<color=#c58cff>Floor {depth} — the Void Sovereign awaits!</color>")
+            : IsBossFloor
             ? (Ko ? $"<color=#ffcc44>지하 {depth}층 — 보스 층이다!</color>" : $"<color=#ffcc44>Floor {depth} — a boss floor!</color>")
             : (Ko ? $"지하 {depth}층으로 내려갔다." : $"You descend to floor {depth}."));
         BuildFloor();
@@ -84,7 +86,8 @@ public partial class GameManager
         if (gameOver) return; // 함정 등으로 자기 턴에 쓰러졌으면 더 진행하지 않는다.
         turn++;
         turnsOnFloor++;
-        if (turn % RegenInterval == 0 && player.Hp < player.MaxHp) player.Hp++;
+        if (turn % RegenInterval == 0 && player.Hp < player.MaxHp)
+            player.Hp = Mathf.Min(player.MaxHp, player.Hp + GameData.RegenAmount(player.MaxHp));
         TickPlayerEffects();
 
         map.ComputeFov(player.Pos, FovRadius);
@@ -373,6 +376,13 @@ public partial class GameManager
                    : $"<color=#ffcc44>★ The {target.DisplayName} is defeated! The seal on the stairs is broken.</color>");
             Shake(0.5f, 0.3f);
             ClearSlamWarnings();
+            // 최종 보스는 전설 장비를 하나 더 준다. 엔딩은 없고 던전은 계속 이어진다.
+            if (GameData.IsFinalBossFloor(depth))
+            {
+                Log(Ko ? "<color=#c58cff>공허가 잠시 물러났다. 하지만 던전은 더 깊은 곳으로 이어진다...</color>"
+                       : "<color=#c58cff>The void recedes for now. But the dungeon goes deeper still...</color>");
+                DropEquipment(EquipmentFactory.Generate(rng, depth, Rarity.Legendary), target.Pos);
+            }
             DropEquipment(EquipmentFactory.Generate(rng, depth, Rarity.Rare), target.Pos);
             DropEquipment(EquipmentFactory.Generate(rng, depth), target.Pos);
             DropItem(ItemKind.HealthPotion, target.Pos);
