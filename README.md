@@ -22,6 +22,10 @@ Unity 6(6000.3.19f1)로 만든 턴제 로그라이크 던전 게임입니다. �
 > 이름을 바꾸면서 저장 위치도 `HKCU\Software\DefaultCompany\Dungeon Crawler`에서 `...\DefaultCompany\DungeonTamheomga`로 바뀌었습니다.
 > 예전 이름으로 쌓은 최고 기록·영혼석·강화·기록 화면 자료를 이어 쓰려면 게임을 끈 상태에서 한 번 복사합니다:
 > `reg copy "HKCU\Software\DefaultCompany\Dungeon Crawler" "HKCU\Software\DefaultCompany\DungeonTamheomga" /s /f`
+>
+> 스토어 출시를 앞두고 회사 이름을 `DefaultCompany`에서 `Zmark`로 바꾸면서 저장 위치가 한 번 더 바뀌었습니다: `HKCU\Software\Zmark\DungeonTamheomga`.
+> 이전 위치의 자료를 이어 쓰려면: `reg copy "HKCU\Software\DefaultCompany\DungeonTamheomga" "HKCU\Software\Zmark\DungeonTamheomga" /s /f`
+> **출시 뒤에는 회사 이름과 게임 이름을 바꾸지 않습니다**(이용자의 기록 위치가 바뀜).
 
 ## 조작법
 

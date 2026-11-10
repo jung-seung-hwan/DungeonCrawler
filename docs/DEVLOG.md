@@ -240,6 +240,7 @@ DungeonTamheomga(처음 이름은 Dungeon Crawler)를 바이브 코딩으로 만
 - **확인**: 빌드 성공(실행 파일에 아이콘 반영), 자리표시자 값으로 `.msix` 생성 성공(32MB), 로고·포스터와 스크린샷 15장 생성(예외 0건).
 - **확인하지 못한 것**: Partner Center가 이 패키지를 받아 주는지와 인증 통과 여부(계정 필요), 패키지로 설치된 상태에서의 실행(개발자 모드 필요), Windows App Certification Kit 검사.
   게시자·제품 ID는 Partner Center에서 받아 `Tools/store/store.config.json`에 넣어야 함.
+- **이어서**: 이름 예약 완료(제품 종류 "MSIX 또는 PWA 앱"). 제품 ID를 `store.config.json`에 넣어 제출용 `.msix` 생성. 회사 이름을 `Zmark`로 바꾸고 이 PC의 기록을 새 저장 위치로 복사(직업 선택 화면에서 영혼석 47·최고 9층 확인).
 - **배운 점**: PowerShell 5.1은 BOM 없는 UTF-8 스크립트를 시스템 코드 페이지로 읽어서, 한글 주석 끝의 바이트가 줄바꿈을 삼켜 다음 줄이 주석에 먹히는 일이 있었음. 새 스크립트는 UTF-8 BOM으로 저장.
 
 ---

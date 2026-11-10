@@ -146,7 +146,8 @@ Windows App Certification Kit(이 PC에 설치돼 있음, 시작 메뉴에서 �
 - MSIX로 설치된 게임이 `HKCU`에 쓰는 값은 이용자·앱별 전용 공간에 따로 저장됩니다(쓸 때 복사). **업데이트해도 유지되고, 게임을 제거하면 함께 지워집니다.**
   스토어 버전이 쓴 기록은 `Builds\Windows`로 실행하는 개발용 빌드에서는 보이지 않습니다.
   ([Understanding how packaged desktop apps run on Windows](https://learn.microsoft.com/en-us/windows/msix/desktop/desktop-to-uwp-behind-the-scenes)의 Registry 절 — 실제 설치로 확인하지는 못했습니다.)
-- 유니티 `companyName`이 아직 `DefaultCompany`입니다. **출시 뒤에 바꾸면 이용자의 기록 위치가 바뀌어 기록이 사라진 것처럼 보이므로, 바꾸려면 첫 제출 전에** 게시자 이름으로 바꾸는 것이 좋습니다(바꾸면 이 PC의 개발용 기록도 한 번 옮겨야 함).
+- 유니티 `companyName`은 첫 제출 전에 `Zmark`로 정했습니다(저장 위치 `HKCU\Software\Zmark\DungeonTamheomga`). **출시 뒤에 `companyName`이나 `productName`을 바꾸면 이용자의 기록 위치가 바뀌어 기록이 사라진 것처럼 보이므로 바꾸지 않습니다.**
+- `companyName`은 스토어에 보이지 않습니다. 스토어에 "만든 사람"으로 보이는 이름은 Partner Center 계정의 게시자 표시 이름(지금 `Jungsh`)이며, 패키지의 `PublisherDisplayName`은 그 값과 같아야 합니다.
 
 ## 7. 업데이트 내는 법
 
