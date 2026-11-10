@@ -227,6 +227,23 @@ DungeonTamheomga(처음 이름은 Dungeon Crawler)를 바이브 코딩으로 만
 
 ---
 
+## 14. Microsoft Store 출시 준비 (사용자 요청)
+
+**요청**: 이 게임을 Microsoft Store에 올리는 것을 도와 달라.
+
+- **방식**: 공식 문서를 확인해 MSIX 패키지 제출을 골랐음 — 지금 빌드를 그대로 묶을 수 있고, 스토어가 무료로 서명·호스팅·업데이트를 맡음.
+  EXE/MSI 제출은 유료 코드 서명 인증서와 직접 호스팅이 필요하고, GDK(MSIXVC) 경로는 Microsoft가 Win32 게임에 권장하지만 준비물이 많음. 비교와 근거 링크는 `docs/STORE.md`.
+- **아이콘**: 다른 그림처럼 코드로 생성(`ProjectTools.GenerateAppIcon` — 전사 픽셀아트를 둥근 사각형 위에). 실행 파일 아이콘으로 지정.
+- **도구**: `Tools\pack-store.ps1`(매니페스트 작성, 크기별 로고, `makepri`·`makeappx`로 `.msix` 생성), `Tools\store-assets.ps1`(스토어 로고·포스터, 1920×1080 스크린샷 한/영),
+  `Tools\test.ps1 shot`에 `-Width`·`-Height` 추가. 버전을 `1.0.0`으로.
+- **글**: 스토어 설명 초안(한/영), 개인정보 처리방침 초안, 계정 생성부터 제출까지의 단계 안내(`docs/STORE.md`).
+- **확인**: 빌드 성공(실행 파일에 아이콘 반영), 자리표시자 값으로 `.msix` 생성 성공(32MB), 로고·포스터와 스크린샷 15장 생성(예외 0건).
+- **확인하지 못한 것**: Partner Center가 이 패키지를 받아 주는지와 인증 통과 여부(계정 필요), 패키지로 설치된 상태에서의 실행(개발자 모드 필요), Windows App Certification Kit 검사.
+  게시자·제품 ID는 Partner Center에서 받아 `Tools/store/store.config.json`에 넣어야 함.
+- **배운 점**: PowerShell 5.1은 BOM 없는 UTF-8 스크립트를 시스템 코드 페이지로 읽어서, 한글 주석 끝의 바이트가 줄바꿈을 삼켜 다음 줄이 주석에 먹히는 일이 있었음. 새 스크립트는 UTF-8 BOM으로 저장.
+
+---
+
 ## 다음에 해볼 만한 것
 - 20층 이후 난이도를 사람 플레이로 확인하고 `GameData.cs`의 심층 계수 조정. 최종 보스 전용 음악.
 - 진행 중인 런의 저장/이어하기.

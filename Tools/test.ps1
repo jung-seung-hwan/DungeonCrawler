@@ -7,7 +7,9 @@ param(
     [int]$Count = 30,
     [int]$StartDepth = 1,
     [ValidateSet("", "ko", "en")] [string]$Lang = "",  # 언어 고정(저장된 선택은 바꾸지 않음). shot은 Builds\shot_<언어>_*.png 로 저장
-    [switch]$BossOnly                                  # -StartDepth <보스 층>과 함께: 그 층의 다른 몬스터를 치우고 보스전만 본다
+    [switch]$BossOnly,                                 # -StartDepth <보스 층>과 함께: 그 층의 다른 몬스터를 치우고 보스전만 본다
+    [int]$Width = 1280,                                # shot의 창 크기. 스토어 스크린샷은 1366x768 이상이어야 한다(Tools\store-assets.ps1 참고)
+    [int]$Height = 720
 )
 $project = Split-Path $PSScriptRoot -Parent
 $exe = Join-Path $project "Builds\Windows\DungeonTamheomga.exe"
@@ -19,7 +21,7 @@ if ($Mode -eq "shot") {
     $base = Join-Path $project $(if ($Lang) { "Builds\shot_$Lang" } else { "Builds\shot" })
     Remove-Item "$base*.png" -ErrorAction SilentlyContinue
     $log = Join-Path $project "Builds\shot.log"
-    $p = Start-Process $exe -ArgumentList "-screen-width 1280 -screen-height 720 -screen-fullscreen 0 -logFile `"$log`" $depthArgs $langArgs -autoshot `"$base`"" -PassThru
+    $p = Start-Process $exe -ArgumentList "-screen-width $Width -screen-height $Height -screen-fullscreen 0 -logFile `"$log`" $depthArgs $langArgs -autoshot `"$base`"" -PassThru
     if (-not $p.WaitForExit(180000)) { $p.Kill(); "timeout" }
     Get-ChildItem "$base*.png" | ForEach-Object { $_.FullName }
 } else {
