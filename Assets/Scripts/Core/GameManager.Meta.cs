@@ -12,6 +12,23 @@ public partial class GameManager
     int bossKills;
     int soulStonesEarned;
     string metaMessage;
+    int revivesUsed;
+
+    float DamageBoost => 1f + MetaBonus(MetaUpgrade.Mastery) / 100f;
+    float DamageTakenScale => 1f - MetaBonus(MetaUpgrade.Ward) / 100f;
+
+    // 재기: 쓰러지는 순간 한 판에 정해진 횟수만큼 체력 절반으로 되살아난다.
+    bool TryRevive()
+    {
+        if (revivesUsed >= MetaBonus(MetaUpgrade.Revive)) return false;
+        revivesUsed++;
+        player.Hp = Mathf.Max(1, player.MaxHp / 2);
+        Play(Sfx.Upgrade);
+        Effects.Burst(player.transform.position, new Color(0.6f, 0.85f, 1f), 16);
+        AddFloatingText(player.transform.position, Ko ? "재기!" : "Second Wind!", new Color(0.6f, 0.85f, 1f), 1.3f);
+        Log(Ko ? "<color=#99ddff>영혼석의 힘으로 다시 일어섰다!</color>" : "<color=#99ddff>The Soul Stones pull you back to your feet!</color>");
+        return true;
+    }
 
     static int SoulStones => PlayerPrefs.GetInt(SoulStonesKey, 0);
     static string SoulStoneLabel => Ko ? "영혼석" : "Soul Stones";
@@ -93,9 +110,9 @@ public partial class GameManager
     void DrawMeta(float w, float h)
     {
         DrawRect(new Rect(0, 0, w, h), new Color(0, 0, 0, 0.8f));
-        const float pw = 640, rowH = 64;
+        const float pw = 640, rowH = 54;
         var defs = GameData.MetaUpgrades;
-        float ph = 150 + defs.Length * rowH;
+        float ph = 140 + defs.Length * rowH;
         float x = (w - pw) / 2, y = (h - ph) / 2;
 
         DrawRect(new Rect(x, y, pw, ph), new Color(0.08f, 0.08f, 0.12f, 0.98f));
@@ -115,14 +132,14 @@ public partial class GameManager
             if (i == metaCursor) DrawRect(new Rect(x + 12, ry, pw - 24, rowH - 6), new Color(0.25f, 0.4f, 0.55f, 0.6f));
 
             string pips = new string('■', current) + new string('□', def.MaxLevel - current);
-            GUI.Label(new Rect(x + 24, ry + 4, 380, 26), $"<b>{def.Name}</b>  <color=#99ddff>{pips}</color>", textStyle);
-            GUI.Label(new Rect(x + 24, ry + 30, 440, 24),
+            GUI.Label(new Rect(x + 24, ry + 2, 380, 26), $"<b>{def.Name}</b>  <color=#99ddff>{pips}</color>", textStyle);
+            GUI.Label(new Rect(x + 24, ry + 25, 450, 24),
                 $"<color=#aaaaaa>{def.Describe(current)}</color>", small);
 
             string price = maxed ? $"<color=#888888>{(Ko ? "최대" : "MAX")}</color>"
                 : SoulStones >= def.CostFor(current) ? $"<color=#99ddff>{SoulStoneLabel} {def.CostFor(current)}</color>"
                 : $"<color=#886666>{SoulStoneLabel} {def.CostFor(current)}</color>";
-            GUI.Label(new Rect(x + pw - 184, ry + 14, 160, 28), price, new GUIStyle(textStyle) { alignment = TextAnchor.MiddleRight });
+            GUI.Label(new Rect(x + pw - 184, ry + 10, 160, 28), price, new GUIStyle(textStyle) { alignment = TextAnchor.MiddleRight });
         }
 
         float fy = y + 66 + defs.Length * rowH;

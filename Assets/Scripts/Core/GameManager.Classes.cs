@@ -30,6 +30,7 @@ public partial class GameManager
     float Lifesteal => Equipped.Where(e => e != null).Sum(e => e.Lifesteal);
     float Thorns => Equipped.Where(e => e != null).Sum(e => e.Thorns);
     float GoldBonus => Equipped.Where(e => e != null).Sum(e => e.GoldBonus) + MetaBonus(MetaUpgrade.Greed) / 100f;
+    int GearAttack => player.Attack - baseAttack;
     float ScrollPower => playerClass.Id == PlayerClass.Mage ? 1.5f : 1f;
 
     int RegenInterval
@@ -209,7 +210,7 @@ public partial class GameManager
             .OrderBy(e => Pathfinder.Distance(e.Pos, player.Pos)).Take(2).ToList();
         if (targets.Count == 0) { Log(Ko ? "보이는 적이 없다." : "No enemies in sight."); Play(Sfx.Deny); return false; }
 
-        int damage = GameData.MagicMissileDamage(level, depth, player.Attack);
+        int damage = Mathf.RoundToInt(GameData.MagicMissileDamage(level, depth, player.Attack, GearAttack) * DamageBoost);
         Play(Sfx.Magic);
         player.PlayAttack(targets[0].Pos, 0.15f);
         foreach (var target in targets)
