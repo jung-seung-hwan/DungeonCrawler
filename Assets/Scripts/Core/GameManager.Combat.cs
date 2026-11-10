@@ -260,7 +260,8 @@ public partial class GameManager
         if (ambush) BreakStealth(Ko ? "기습과 함께 모습을 드러냈다." : "Your ambush gives you away.");
 
         if (!defender.IsPlayer) Play(crit || ambush ? Sfx.Crit : Sfx.Hit);
-        DealDamage(defender, damage, Ko ? attacker.DisplayName : "the " + attacker.DisplayName, crit || ambush, attacker.Pos);
+        DealDamage(defender, damage, Ko ? attacker.DisplayName : "the " + attacker.DisplayName, crit || ambush, attacker.Pos,
+            attacker.Template != null ? "enemy:" + attacker.Template.Name : null);
 
         if (attacker.IsPlayer && Lifesteal > 0 && !gameOver)
         {
@@ -281,7 +282,7 @@ public partial class GameManager
     }
 
     // from: 공격이 날아온 칸(밀려나는 방향 계산용). 없으면 무작위 방향으로 움찔한다.
-    void DealDamage(Actor target, int damage, string sourceName, bool crit = false, Vector2Int? from = null)
+    void DealDamage(Actor target, int damage, string sourceName, bool crit = false, Vector2Int? from = null, string sourceKey = null)
     {
         target.Hp -= damage;
         target.PlayHit(from);
@@ -304,6 +305,7 @@ public partial class GameManager
 
         if (target.IsPlayer)
         {
+            killerKey = sourceKey;
             OnPlayerDied(sourceName);
             return;
         }
@@ -412,6 +414,7 @@ public partial class GameManager
         Play(Sfx.Death);
         Shake(0.4f, 0.3f);
         AwardSoulStones();
+        SaveRunRecord();
         if (depth > bestDepth && !autopilotActive)
         {
             bestDepth = depth;
