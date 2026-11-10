@@ -4,7 +4,7 @@ using System.Linq;
 using UnityEngine;
 
 // 개발·검증용 자동 플레이. 실행 인자로 켠다.
-//   -autoshot <경로>    봇이 플레이하면서 전투/보스/마지막 장면을 <경로>_combat.png 등으로 저장하고 종료
+//   -autoshot <경로>    봇이 플레이하면서 타이틀/직업 선택/전투/보스/마지막 장면을 <경로>_combat.png 등으로 저장하고 종료
 //   -simulate <횟수>    화면 없이 여러 판을 빠르게 돌려 도달 층수 통계를 로그에 남기고 종료 (밸런스 확인용)
 //   -startdepth <층>    해당 층에서, 그 층에 맞게 성장한 상태로 시작
 //   -class <직업>       warrior / rogue / mage 중 하나로 고정 (없으면 시뮬레이션은 직업을 돌아가며, 스크린샷은 무작위)
@@ -242,6 +242,9 @@ public partial class GameManager
     {
         autopilotActive = true;
         yield return new WaitForSeconds(0.5f);
+        yield return Capture(basePath + "_title.png");
+        yield return new WaitForSeconds(0.2f);
+        showingTitle = false;
         yield return Capture(basePath + "_select.png");
         yield return new WaitForSeconds(0.2f);
         OpenMeta();

@@ -134,7 +134,8 @@ public partial class GameManager
         }
         if (choosingClass)
         {
-            DrawClassSelect(w, h);
+            if (showingTitle) DrawTitle(w, h);
+            else DrawClassSelect(w, h);
             DrawSoundStatus(w);
             return;
         }
@@ -197,12 +198,10 @@ public partial class GameManager
     void DrawClassSelect(float w, float h)
     {
         DrawRect(new Rect(0, 0, w, h), new Color(0.03f, 0.03f, 0.05f));
-        GUI.Label(new Rect(0, 50, w, 60), "<b>DUNGEON CRAWLER</b>", bigStyle);
-        GUI.Label(new Rect(0, 110, w, 36), Ko ? "<color=#aaaaaa>직업을 선택하세요 (숫자 키 1 ~ 3)</color>" : "<color=#aaaaaa>Choose your class (number keys 1 ~ 3)</color>", new GUIStyle(bigStyle) { fontSize = 20 });
+        GUI.Label(new Rect(0, 50, w, 60), $"<b>{GameTitle}</b>", bigStyle);
+        GUI.Label(new Rect(0, 110, w, 36), Ko ? "<color=#aaaaaa>직업을 선택하세요 (마우스 클릭 · 숫자 키 1 ~ 3 · A D 로 고르고 Enter)</color>" : "<color=#aaaaaa>Choose your class (click · number keys 1 ~ 3 · A D then Enter)</color>", new GUIStyle(bigStyle) { fontSize = 20 });
 
-        const float cw = 300, ch = 360, gap = 24;
-        float total = GameData.Classes.Length * cw + (GameData.Classes.Length - 1) * gap;
-        float startX = (w - total) / 2;
+        const float cw = ClassCardWidth, ch = ClassCardHeight;
         var body = new GUIStyle(textStyle) { fontSize = 16, wordWrap = true };
         var line = new GUIStyle(textStyle) { fontSize = 16 };
 
@@ -210,9 +209,13 @@ public partial class GameManager
         {
             var c = GameData.Classes[i];
             string hex = ColorUtility.ToHtmlStringRGB(c.Color);
-            float x = startX + i * (cw + gap), y = 170;
+            var card = ClassCardRect(i, w);
+            float x = card.x, y = card.y;
+            bool selected = i == classCursor;
 
-            DrawRect(new Rect(x, y, cw, ch), new Color(0.1f, 0.1f, 0.14f, 0.95f));
+            // 커서가 놓인 카드는 직업 색 테두리와 밝은 바탕으로 표시한다.
+            if (selected) DrawRect(new Rect(x - 4, y - 4, cw + 8, ch + 8), c.Color);
+            DrawRect(card, selected ? new Color(0.16f, 0.16f, 0.22f) : new Color(0.1f, 0.1f, 0.14f, 0.95f));
             DrawRect(new Rect(x, y, cw, 4), c.Color);
             DrawSprite(PixelArt.Get(c.ArtKey), new Rect(x + cw - 64, y + 10, 48, 48));
             string keyHint = Ko ? $"{i + 1}번 키" : $"Key {i + 1}";
@@ -233,8 +236,8 @@ public partial class GameManager
         var footer = new GUIStyle(bigStyle) { fontSize = 18 };
         // 언어 전환 안내는 바꿀 언어의 글자로 보여준다.
         GUI.Label(new Rect(0, h - 100, w, 30), Ko
-            ? $"<color=#99ddff>영혼석 {SoulStones}</color>   <color=#aaaaaa>U 키: 영구 강화   T 키: 기록   L 키: English   M 키: 음소거   [ ] 음량</color>"
-            : $"<color=#99ddff>Soul Stones {SoulStones}</color>   <color=#aaaaaa>U key: Upgrades   T key: Records   L key: 한국어   M key: Mute   [ ] Volume</color>", footer);
+            ? $"<color=#99ddff>영혼석 {SoulStones}</color>   <color=#aaaaaa>U 키: 영구 강화   T 키: 기록   L 키: English   M 키: 음소거   [ ] 음량   Esc: 타이틀</color>"
+            : $"<color=#99ddff>Soul Stones {SoulStones}</color>   <color=#aaaaaa>U key: Upgrades   T key: Records   L key: 한국어   M key: Mute   [ ] Volume   Esc: Title</color>", footer);
         int best = PlayerPrefs.GetInt(BestDepthKey, 0);
         if (best > 0)
             GUI.Label(new Rect(0, h - 70, w, 30), $"<color=#ffd966>{(Ko ? "최고 기록" : "Best")}: {FloorName(best)}</color>", footer);

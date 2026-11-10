@@ -10,7 +10,7 @@ param(
     [switch]$BossOnly                                  # -StartDepth <보스 층>과 함께: 그 층의 다른 몬스터를 치우고 보스전만 본다
 )
 $project = Split-Path $PSScriptRoot -Parent
-$exe = Join-Path $project "Builds\Windows\DungeonCrawler.exe"
+$exe = Join-Path $project "Builds\Windows\DungeonTamheomga.exe"
 $depthArgs = if ($StartDepth -gt 1) { "-startdepth $StartDepth" } else { "" }
 if ($BossOnly) { $depthArgs += " -bossonly" }
 $langArgs = if ($Lang) { "-lang $Lang" } else { "" }

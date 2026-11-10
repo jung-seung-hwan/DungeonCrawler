@@ -1,4 +1,4 @@
-# Dungeon Crawler
+# DungeonTamheomga
 
 Unity 6(6000.3.19f1)로 만든 턴제 로그라이크 던전 게임입니다. 바이브 코딩으로 개발했으며,
 **아트·사운드·씬 구성까지 전부 C# 코드로 생성**하기 때문에 에디터에서 따로 배치할 에셋이 없습니다.
@@ -11,10 +11,17 @@ Unity 6(6000.3.19f1)로 만든 턴제 로그라이크 던전 게임입니다. �
 
 | 방법 | 순서 |
 |------|------|
-| 빌드된 게임 | `Builds/Windows/DungeonCrawler.exe` 실행 |
+| 빌드된 게임 | `Builds/Windows/DungeonTamheomga.exe` 실행 |
 | 유니티 에디터 | Unity Hub → Add → 이 폴더 선택 → `Assets/Scenes/Main.unity` 열기 → ▶ Play |
 
 씬이 비어 있어도 Play를 누르면 `GameBootstrap`이 `GameManager`를 만들고 게임이 시작됩니다.
+게임을 켜면 **타이틀 화면**이 먼저 나오고, 아무 키나 누르거나 마우스를 클릭하면 직업 선택 화면으로 넘어갑니다.
+
+> 저장소 폴더와 Git 원격 이름은 예전 이름(`DungeonCrawler`) 그대로입니다. 게임 이름(창 제목·실행 파일)만 `DungeonTamheomga`입니다.
+>
+> 이름을 바꾸면서 저장 위치도 `HKCU\Software\DefaultCompany\Dungeon Crawler`에서 `...\DefaultCompany\DungeonTamheomga`로 바뀌었습니다.
+> 예전 이름으로 쌓은 최고 기록·영혼석·강화·기록 화면 자료를 이어 쓰려면 게임을 끈 상태에서 한 번 복사합니다:
+> `reg copy "HKCU\Software\DefaultCompany\Dungeon Crawler" "HKCU\Software\DefaultCompany\DungeonTamheomga" /s /f`
 
 ## 조작법
 
@@ -29,9 +36,11 @@ Unity 6(6000.3.19f1)로 만든 턴제 로그라이크 던전 게임입니다. �
 | Tab | 조작법 펼치기/접기 |
 | Esc | 상점 닫기 |
 | R | (게임 오버 후) 다시 시작 |
+| 아무 키 / 마우스 클릭 | (타이틀 화면) 직업 선택 화면으로 |
+| 마우스 / 1 ~ 3 / A·D + Enter | (직업 선택 화면) 카드에 마우스를 올리면 커서 이동, 클릭하면 시작. 숫자 키는 바로 시작, A·D(←·→)로 커서를 옮기고 Enter·Space로 시작. Esc는 타이틀로 |
 | U | (직업 선택 화면) 영구 강화 열기 — W·S 선택, Enter·Space 강화, Esc 닫기 |
 | T | (직업 선택 화면) 기록 화면 열기 — Esc·T 닫기 |
-| L | (직업 선택 화면) 언어 전환: 한국어 ↔ English |
+| L | (타이틀·직업 선택 화면) 언어 전환: 한국어 ↔ English |
 | M | 음소거 켜기/끄기 (어느 화면에서나) |
 | [ · ] | 음량 줄이기 · 키우기, 10단계 (- · = 도 가능) |
 
@@ -155,6 +164,7 @@ Assets/
    │  ├─ GameManager.Rooms.cs     특수 방 배정, 제단, 함정
    │  ├─ GameManager.Shop.cs      상인과 상점 UI
    │  ├─ GameManager.Hud.cs       HUD, 미니맵, 데미지 숫자, 체력 바, 화면 흔들림
+   │  ├─ GameManager.Title.cs     타이틀 화면, 직업 선택 화면의 마우스·커서 조작
    │  ├─ GameManager.Meta.cs      영구 성장 (영혼석 획득, 영구 강화 화면)
    │  ├─ GameManager.Records.cs   기록 화면 (직업별 최고 층, 상위 10판, 누적 통계)
    │  ├─ GameManager.Audio.cs     효과음 재생, 배경음악 전환, 음량·음소거
@@ -209,15 +219,15 @@ Assets/
 깊은 층을 직접 플레이해 보려면(테스트용, 기록에 남지 않음):
 
 ```powershell
-.\Builds\Windows\DungeonCrawler.exe -startdepth 50             # 직업을 고르면 50층(공허의 군주)에서 시작
-.\Builds\Windows\DungeonCrawler.exe -startdepth 50 -bossonly   # 다른 몬스터 없이 보스만
+.\Builds\Windows\DungeonTamheomga.exe -startdepth 50             # 직업을 고르면 50층(공허의 군주)에서 시작
+.\Builds\Windows\DungeonTamheomga.exe -startdepth 50 -bossonly   # 다른 몬스터 없이 보스만
 ```
 
 게임 실행 파일에 직접 줄 수 있는 인자:
 
 | 인자 | 설명 |
 |------|------|
-| `-autoshot <경로>` | 봇이 플레이하면서 직업선택·영구 강화·기록 화면(실제 기록과 예시)·전투·특수방·상점·보스·내려찍기·마지막 장면을 저장하고 종료 |
+| `-autoshot <경로>` | 봇이 플레이하면서 타이틀·직업선택·영구 강화·기록 화면(실제 기록과 예시)·전투·특수방·상점·보스·내려찍기·마지막 장면을 저장하고 종료 |
 | `-simulate <판수>` | 화면 없이 여러 판을 돌려 `[SIM]` 통계를 로그에 남김 |
 | `-startdepth <층>` | 그 층에 맞게 성장한 상태(레벨·장비·소모품·골드)로 시작. 1층에서 시작한 봇의 층별 실측치에 맞춘 근사. **사람이 직접 플레이할 때도 적용**되며(직업을 고르면 그 층에서 시작), 이렇게 시작한 판은 최고 기록·기록 화면·영혼석에 남지 않음 |
 | `-bossonly` | (`-startdepth <보스 층>`과 함께) 그 층의 다른 몬스터를 치우고 보스전만 진행. `-simulate`에서는 `[SIM] boss` 줄에 승률·물약 소모를 남김 |
