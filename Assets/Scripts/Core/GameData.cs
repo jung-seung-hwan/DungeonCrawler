@@ -134,7 +134,7 @@ public static class GameData
         new() { Id = MetaUpgrade.Mastery, Name = new("숙련", "Mastery"), Effect = new("주는 피해 +{0}%", "Damage dealt +{0}%"), PerLevel = 4, MaxLevel = 5, BaseCost = 20 },
         new() { Id = MetaUpgrade.Ward, Name = new("수호", "Ward"), Effect = new("적에게 받는 피해 -{0}%", "Damage taken from enemies -{0}%"), PerLevel = 3, MaxLevel = 5, BaseCost = 20 },
         new() { Id = MetaUpgrade.Wisdom, Name = new("배움", "Wisdom"), Effect = new("경험치 획득 +{0}%", "Experience gained +{0}%"), PerLevel = 10, MaxLevel = 5, BaseCost = 15 },
-        new() { Id = MetaUpgrade.Revive, Name = new("재기", "Second Wind"), Effect = new("한 판에 부활 {0}회 (체력 절반)", "Revives per run: {0} (half HP)"), PerLevel = 1, MaxLevel = 1, BaseCost = 120 },
+        new() { Id = MetaUpgrade.Revive, Name = new("부활", "Revive"), Effect = new("한 판에 {0}회 (체력 절반)", "Uses per run: {0} (half HP)"), PerLevel = 1, MaxLevel = 1, BaseCost = 120 },
     };
 
     public static MetaUpgradeDef MetaOf(MetaUpgrade id) => System.Array.Find(MetaUpgrades, m => m.Id == id);
