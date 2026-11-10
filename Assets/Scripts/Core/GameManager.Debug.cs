@@ -50,6 +50,10 @@ public partial class GameManager
         Application.Quit();
     }
 
+    // 봇이 플레이하거나 -startdepth로 시작한 판. 최고 기록·기록 화면·영혼석에 반영하지 않는다.
+    bool IsTestRun => autopilotActive || debugStartDepth > 1;
+
+    // -startdepth가 없으면 BeginRun과 똑같다. 직업 선택 화면에서 사람이 시작할 때도 이 함수를 거친다.
     void BeginDebugRun(PlayerClass cls)
     {
         BeginRun(cls);
@@ -108,6 +112,8 @@ public partial class GameManager
                 Destroy(enemy.gameObject);
             }
         }
+        Log(Ko ? $"<color=#99ddff>테스트 시작: 지하 {depth}층에 맞게 성장한 상태다. 이 판은 기록과 영혼석에 남지 않는다.</color>"
+               : $"<color=#99ddff>Test start: grown to match floor {depth}. This run is not saved to records or Soul Stones.</color>");
     }
 
     // ───────────────────────── 자동 플레이 봇 ─────────────────────────

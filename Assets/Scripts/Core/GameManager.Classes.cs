@@ -131,8 +131,9 @@ public partial class GameManager
         if (cmd.Kind == CommandKind.Meta) { OpenMeta(); return; }
         if (cmd.Kind == CommandKind.Records) { OpenRecords(); return; }
         if (cmd.Kind == CommandKind.Language) { Loc.Toggle(); Play(Sfx.UiMove); return; }
+        // 실행 인자 -startdepth가 있으면 그 층에 맞게 성장한 상태로 시작한다(테스트용, 기록에 남지 않는다).
         if (cmd.Kind == CommandKind.UseItem && !cmd.FromPotionKey && cmd.Slot < GameData.Classes.Length)
-            BeginRun(GameData.Classes[cmd.Slot].Id);
+            BeginDebugRun(GameData.Classes[cmd.Slot].Id);
     }
 
     void ApplyClass(PlayerClass id)

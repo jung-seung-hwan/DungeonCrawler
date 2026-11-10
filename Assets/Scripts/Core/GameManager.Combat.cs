@@ -425,7 +425,7 @@ public partial class GameManager
         Shake(0.4f, 0.3f);
         AwardSoulStones();
         SaveRunRecord();
-        if (depth > bestDepth && !autopilotActive)
+        if (depth > bestDepth && !IsTestRun)
         {
             bestDepth = depth;
             newRecord = true;

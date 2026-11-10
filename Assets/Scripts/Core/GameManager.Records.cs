@@ -96,7 +96,7 @@ public partial class GameManager
     // 런이 끝났을 때 한 번 부른다.
     void SaveRunRecord()
     {
-        if (autopilotActive) return;
+        if (IsTestRun) return;
         var data = recordsCache ??= LoadRecords();
         data.Add(new RunRecord
         {
