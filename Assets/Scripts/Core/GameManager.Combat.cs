@@ -54,12 +54,14 @@ public partial class GameManager
         if (map.Get(player.Pos) != TileType.Stairs)
         {
             Log(Ko ? "여기에는 계단이 없다." : "There are no stairs here.");
+            Play(Sfx.Deny);
             return;
         }
         if (StairsSealed)
         {
             Log(Ko ? $"계단이 봉인되어 있다. {boss.DisplayName}{Josa(boss.DisplayName, "을", "를")} 쓰러뜨려야 한다."
                    : $"The stairs are sealed. Defeat the {boss.DisplayName} first.");
+            Play(Sfx.Deny);
             return;
         }
 
@@ -157,7 +159,7 @@ public partial class GameManager
         {
             Projectile.Spawn(enemy.Pos, player.Pos, enemy.IsBoss ? new Color(1f, 0.4f, 0.6f) : new Color(1f, 0.9f, 0.6f),
                 enemy.IsBoss ? 1.4f : 0.7f);
-            Play(Sfx.Shoot);
+            Play(enemy.IsBoss ? Sfx.Beam : Sfx.Shoot);
             Attack(enemy, player, enemy.RangedVerb);
             return;
         }
@@ -318,6 +320,7 @@ public partial class GameManager
             enemy.Attack += Mathf.Max(2, enemy.Attack / 2);
             enemy.SetBaseColor(new Color(1f, 0.55f, 0.5f));
             AddFloatingText(enemy.transform.position, Ko ? "격노!" : "Enraged!", new Color(1f, 0.4f, 0.2f), 1.2f);
+            Play(Sfx.Frenzy, 0.7f);
             Log(Ko ? $"<color=#ff8855>{enemy.DisplayName}{Josa(enemy.DisplayName, "이", "가")} 격노했다! 공격력이 크게 올랐다.</color>"
                    : $"<color=#ff8855>The {enemy.DisplayName} is enraged! Its attack rises sharply.</color>");
         }
@@ -342,6 +345,7 @@ public partial class GameManager
                 clone.SetPos(cell);
                 clone.SetVisible(map.IsVisible(cell));
                 enemies.Add(clone);
+                Play(Sfx.Split);
 
                 Log(Ko ? $"{enemy.DisplayName}{Josa(enemy.DisplayName, "이", "가")} 둘로 갈라졌다!" : $"The {enemy.DisplayName} splits in two!");
                 return;
@@ -352,7 +356,7 @@ public partial class GameManager
     void OnEnemyKilled(Actor target)
     {
         kills++;
-        Play(Sfx.Kill);
+        Play(target.IsBoss ? Sfx.BossDown : Sfx.Kill);
         Effects.Death(target, target.Template?.Color ?? Color.white);
         enemies.Remove(target);
         Destroy(target.gameObject);

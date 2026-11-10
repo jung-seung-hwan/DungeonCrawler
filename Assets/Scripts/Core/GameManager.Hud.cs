@@ -135,6 +135,7 @@ public partial class GameManager
         if (choosingClass)
         {
             DrawClassSelect(w, h);
+            DrawSoundStatus(w);
             return;
         }
         if (player == null) return;
@@ -148,6 +149,7 @@ public partial class GameManager
         DrawHelp(w, h);
         if (shopOpen) DrawShop(w, h);
         if (gameOver) DrawGameOver(w, h);
+        DrawSoundStatus(w);
     }
 
     void DrawStatusPanel()
@@ -231,8 +233,8 @@ public partial class GameManager
         var footer = new GUIStyle(bigStyle) { fontSize = 18 };
         // 언어 전환 안내는 바꿀 언어의 글자로 보여준다.
         GUI.Label(new Rect(0, h - 100, w, 30), Ko
-            ? $"<color=#99ddff>영혼석 {SoulStones}</color>   <color=#aaaaaa>U 키: 영구 강화   L 키: English</color>"
-            : $"<color=#99ddff>Soul Stones {SoulStones}</color>   <color=#aaaaaa>U key: Upgrades   L key: 한국어</color>", footer);
+            ? $"<color=#99ddff>영혼석 {SoulStones}</color>   <color=#aaaaaa>U 키: 영구 강화   L 키: English   M 키: 음소거   [ ] 음량</color>"
+            : $"<color=#99ddff>Soul Stones {SoulStones}</color>   <color=#aaaaaa>U key: Upgrades   L key: 한국어   M key: Mute   [ ] Volume</color>", footer);
         int best = PlayerPrefs.GetInt(BestDepthKey, 0);
         if (best > 0)
             GUI.Label(new Rect(0, h - 70, w, 30), $"<color=#ffd966>{(Ko ? "최고 기록" : "Best")}: {FloorName(best)}</color>", footer);
@@ -260,9 +262,9 @@ public partial class GameManager
             return;
         }
         string help = Ko
-            ? "이동  WASD · 방향키\n대각선  Q E Z C\n대기  Space\n스킬  X\n아이템  1 ~ 4 (물약 H)\n계단  F\n<color=#777777>Tab  접기</color>"
-            : "Move  WASD · Arrows\nDiagonal  Q E Z C\nWait  Space\nSkill  X\nItems  1 ~ 4 (Potion H)\nStairs  F\n<color=#777777>Tab  Hide</color>";
-        const float hw = 220, hh = 170;
+            ? "이동  WASD · 방향키\n대각선  Q E Z C\n대기  Space\n스킬  X\n아이템  1 ~ 4 (물약 H)\n계단  F\n소리  M · [ ]\n<color=#777777>Tab  접기</color>"
+            : "Move  WASD · Arrows\nDiagonal  Q E Z C\nWait  Space\nSkill  X\nItems  1 ~ 4 (Potion H)\nStairs  F\nSound  M · [ ]\n<color=#777777>Tab  Hide</color>";
+        const float hw = 220, hh = 192;
         DrawRect(new Rect(w - hw - 10, h - hh - 10, hw, hh), new Color(0, 0, 0, 0.6f));
         GUI.Label(new Rect(w - hw + 2, h - hh - 4, hw - 12, hh), $"<color=#aaaaaa>{help}</color>", style);
     }

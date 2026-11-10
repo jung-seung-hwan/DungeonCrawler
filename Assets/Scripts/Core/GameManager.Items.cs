@@ -42,7 +42,7 @@ public partial class GameManager
         if (item.Kind == ItemKind.Equipment)
         {
             ReceiveEquipment(item.Equipment, bought: false);
-            Play(Sfx.Pickup);
+            Play(Sfx.Equip);
         }
         else
         {
@@ -62,6 +62,7 @@ public partial class GameManager
                 gold += amount;
                 Log(Ko ? $"금화 {amount}개를 주웠다." : $"You pick up {amount} gold.");
                 AddFloatingText(player.transform.position, $"+{amount}G", new Color(1f, 0.85f, 0.25f));
+                Play(Sfx.Coin);
                 break;
             default:
                 inventory[kind] = Count(kind) + amount;
@@ -69,9 +70,9 @@ public partial class GameManager
                 string name = GameData.ItemName(kind);
                 Log(Ko ? $"{name}{Josa(name, "을", "를")} {(bought ? "샀다" : "주웠다")}. ({slot} 키로 사용)"
                        : $"{(bought ? "Bought" : "Picked up")} {Loc.A(name)}. (Press {slot} to use)");
+                Play(bought ? Sfx.Buy : Sfx.Pickup);
                 break;
         }
-        Play(Sfx.Pickup);
     }
 
     void UseConsumable(ItemKind kind)
@@ -80,6 +81,7 @@ public partial class GameManager
         if (Count(kind) <= 0)
         {
             Log(Ko ? $"{name}{Josa(name, "이", "가")} 없다." : $"You have no {name}.");
+            Play(Sfx.Deny);
             return;
         }
 
@@ -99,9 +101,10 @@ public partial class GameManager
 
     bool DrinkPotion()
     {
-        if (player.Hp >= player.MaxHp) { Log(Ko ? "체력이 이미 가득하다." : "You are already at full health."); return false; }
-        int healed = Mathf.Min(Mathf.Max(12, player.MaxHp * 2 / 5), player.MaxHp - player.Hp);        player.Hp += healed;
-        Play(Sfx.Magic);
+        if (player.Hp >= player.MaxHp) { Log(Ko ? "체력이 이미 가득하다." : "You are already at full health."); Play(Sfx.Deny); return false; }
+        int healed = Mathf.Min(Mathf.Max(12, player.MaxHp * 2 / 5), player.MaxHp - player.Hp);
+        player.Hp += healed;
+        Play(Sfx.Heal);
         AddFloatingText(player.transform.position, $"+{healed}", new Color(0.4f, 1f, 0.4f));
         Log(Ko ? $"물약을 마셨다. 체력 +{healed}" : $"You drink the potion. HP +{healed}");
         return true;
@@ -117,7 +120,7 @@ public partial class GameManager
             if (target == null || Pathfinder.Distance(player.Pos, enemy.Pos) < Pathfinder.Distance(player.Pos, target.Pos))
                 target = enemy;
         }
-        if (target == null) { Log(Ko ? "보이는 적이 없다." : "No enemies in sight."); return false; }
+        if (target == null) { Log(Ko ? "보이는 적이 없다." : "No enemies in sight."); Play(Sfx.Deny); return false; }
 
         int damage = Mathf.RoundToInt((10 + depth * 2 + level) * ScrollPower);
         player.PlayAttack(target.Pos, 0.15f);
@@ -145,7 +148,7 @@ public partial class GameManager
 
             player.SetPos(cell, snap: true);
             cam.transform.position = new Vector3(cell.x, cell.y, -10f);
-            Play(Sfx.Magic);
+            Play(Sfx.Teleport);
             Log(Ko ? "몸이 빛에 휩싸이더니 다른 곳으로 이동했다!" : "Light engulfs you and carries you somewhere else!");
             PickUpItemAt(cell);
             return true;
@@ -159,7 +162,7 @@ public partial class GameManager
         map.RevealAll();
         RevealAllTraps();
         RefreshTraps();
-        Play(Sfx.Magic);
+        Play(Sfx.MapReveal);
         Log(Ko ? "이 층의 지도가 머릿속에 그려진다. 함정 위치도 보인다!" : "A map of this floor forms in your mind. Traps are revealed too!");
         RebuildMinimap();
         return true;

@@ -40,6 +40,7 @@ public partial class GameManager
     {
         metaOpen = true;
         metaMessage = null;
+        Play(Sfx.UiOpen);
     }
 
     void HandleMetaInput(PlayerCommand cmd)
@@ -50,6 +51,7 @@ public partial class GameManager
             case CommandKind.Move when cmd.Dir.y != 0:
                 metaCursor = (metaCursor - cmd.Dir.y + count) % count;
                 metaMessage = null;
+                Play(Sfx.UiMove);
                 break;
             case CommandKind.Descend:
             case CommandKind.Wait:
@@ -58,6 +60,7 @@ public partial class GameManager
             case CommandKind.Cancel:
             case CommandKind.Meta:
                 metaOpen = false;
+                Play(Sfx.UiClose);
                 break;
         }
     }
@@ -68,6 +71,7 @@ public partial class GameManager
         if (current >= def.MaxLevel)
         {
             metaMessage = Ko ? $"{def.Name}{Josa(def.Name, "은", "는")} 이미 최대 단계다." : $"{def.Name} is already at its maximum level.";
+            Play(Sfx.Deny);
             return;
         }
         int cost = def.CostFor(current);
@@ -75,12 +79,13 @@ public partial class GameManager
         {
             metaMessage = Ko ? $"<color=#ff8888>영혼석이 부족하다. ({cost}개 필요)</color>"
                              : $"<color=#ff8888>Not enough Soul Stones. ({cost} needed)</color>";
+            Play(Sfx.Deny);
             return;
         }
         PlayerPrefs.SetInt(SoulStonesKey, SoulStones - cost);
         PlayerPrefs.SetInt(MetaLevelKeyPrefix + def.Id, current + 1);
         PlayerPrefs.Save();
-        Play(Sfx.LevelUp);
+        Play(Sfx.Upgrade);
         metaMessage = Ko ? $"<color=#88ff88>{def.Name} {current + 1}단계 강화 완료!</color>"
                          : $"<color=#88ff88>{def.Name} upgraded to level {current + 1}!</color>";
     }
