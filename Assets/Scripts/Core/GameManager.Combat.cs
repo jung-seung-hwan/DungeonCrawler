@@ -350,6 +350,7 @@ public partial class GameManager
 
         if (target.IsBoss)
         {
+            bossKills++;
             if (autopilotActive)
                 Debug.Log($"[BOSS] {target.DisplayName} down on turn {turnsOnFloor} of floor; player {playerClass.Name} " +
                           $"hp {player.Hp}/{player.MaxHp}, atk {player.Attack}, def {player.Defense}, boss atk {target.Attack} def {target.Defense}");
@@ -395,6 +396,7 @@ public partial class GameManager
         Effects.Burst(player.transform.position, new Color(1f, 0.3f, 0.3f), 16);
         Play(Sfx.Death);
         Shake(0.4f, 0.3f);
+        AwardSoulStones();
         if (depth > bestDepth && !autopilotActive)
         {
             bestDepth = depth;

@@ -45,6 +45,27 @@ public class ClassDef
     public Color Color;
 }
 
+public enum MetaUpgrade { Vitality, Might, Guard, Potion, Greed }
+
+// 영혼석으로 사는 영구 강화 한 종류.
+public class MetaUpgradeDef
+{
+    public MetaUpgrade Id;
+    public string Name;
+    public string Effect;      // "{0}" 자리에 수치가 들어간다
+    public int PerLevel;       // 단계당 수치
+    public int MaxLevel;
+    public int BaseCost;       // n단계(1부터) 가격 = BaseCost × n
+
+    public int CostFor(int currentLevel) => BaseCost * (currentLevel + 1);
+
+    public string Describe(int currentLevel)
+    {
+        string now = string.Format(Effect, currentLevel * PerLevel);
+        return currentLevel >= MaxLevel ? now : $"{now}  →  {string.Format(Effect, (currentLevel + 1) * PerLevel)}";
+    }
+}
+
 public enum ItemKind { HealthPotion, FireScroll, TeleportScroll, MapScroll, Equipment, Gold }
 
 public enum RoomKind { Normal, Start, Stairs, Shop, Treasure, Shrine }
@@ -83,6 +104,21 @@ public static class GameData
             Color = new Color(0.75f, 0.65f, 1f),
         },
     };
+
+    // 영구 강화. 직업 선택 화면에서 영혼석으로 산다.
+    public static readonly MetaUpgradeDef[] MetaUpgrades =
+    {
+        new() { Id = MetaUpgrade.Vitality, Name = "강인함", Effect = "시작 최대 체력 +{0}", PerLevel = 4, MaxLevel = 5, BaseCost = 10 },
+        new() { Id = MetaUpgrade.Might, Name = "날카로움", Effect = "시작 공격력 +{0}", PerLevel = 1, MaxLevel = 3, BaseCost = 25 },
+        new() { Id = MetaUpgrade.Guard, Name = "단단함", Effect = "시작 방어력 +{0}", PerLevel = 1, MaxLevel = 2, BaseCost = 40 },
+        new() { Id = MetaUpgrade.Potion, Name = "비상 물약", Effect = "시작 체력 물약 +{0}", PerLevel = 1, MaxLevel = 2, BaseCost = 30 },
+        new() { Id = MetaUpgrade.Greed, Name = "황금 손", Effect = "골드 획득 +{0}%", PerLevel = 10, MaxLevel = 3, BaseCost = 20 },
+    };
+
+    public static MetaUpgradeDef MetaOf(MetaUpgrade id) => System.Array.Find(MetaUpgrades, m => m.Id == id);
+
+    // 런이 끝났을 때 받는 영혼석: 내려간 층, 쓰러뜨린 보스, 처치 수.
+    public static int SoulStonesFor(int depth, int kills, int bossKills) => (depth - 1) * 2 + bossKills * 8 + kills / 8;
 
     public static ClassDef ClassOf(PlayerClass id) => System.Array.Find(Classes, c => c.Id == id);
 
