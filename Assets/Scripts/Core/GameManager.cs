@@ -10,6 +10,7 @@ using UnityEngine;
 //   GameManager.Shop.cs    상인, 상점
 //   GameManager.Hud.cs     HUD, 미니맵, 데미지 숫자, 화면 흔들림
 //   GameManager.Meta.cs    영구 성장(영혼석, 영구 강화)
+//   GameManager.Records.cs 기록 화면(직업별 최고 층, 상위 10판, 누적 통계)
 //   GameManager.Audio.cs   효과음 재생, 배경음악 전환, 음량·음소거
 //   GameManager.Debug.cs   자동 플레이 봇, 스크린샷, 밸런스 시뮬레이션
 public partial class GameManager : MonoBehaviour
@@ -124,6 +125,7 @@ public partial class GameManager : MonoBehaviour
         showHelp = true;
         helpAutoHidden = false;
         killedBy = null;
+        killerKey = null;
         bestDepth = PlayerPrefs.GetInt(BestDepthKey, 0);
         log.Clear();
         floatingTexts.Clear();

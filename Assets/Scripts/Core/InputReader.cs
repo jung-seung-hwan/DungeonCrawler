@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public enum CommandKind { None, Move, Wait, UseItem, Descend, Restart, Cancel, Skill, ToggleHelp, Meta, Language, Mute, VolumeDown, VolumeUp }
+public enum CommandKind { None, Move, Wait, UseItem, Descend, Restart, Cancel, Skill, ToggleHelp, Meta, Language, Mute, VolumeDown, VolumeUp, Records }
 
 public struct PlayerCommand
 {
@@ -47,6 +47,7 @@ public class InputReader
         if (Input.GetKeyDown(KeyCode.R)) return new PlayerCommand(CommandKind.Restart);
         if (Input.GetKeyDown(KeyCode.Tab)) return new PlayerCommand(CommandKind.ToggleHelp);
         if (Input.GetKeyDown(KeyCode.U)) return new PlayerCommand(CommandKind.Meta);
+        if (Input.GetKeyDown(KeyCode.T)) return new PlayerCommand(CommandKind.Records);
         if (Input.GetKeyDown(KeyCode.L)) return new PlayerCommand(CommandKind.Language);
         if (Input.GetKeyDown(KeyCode.M)) return new PlayerCommand(CommandKind.Mute);
         if (Input.GetKeyDown(KeyCode.LeftBracket) || Input.GetKeyDown(KeyCode.Minus)) return new PlayerCommand(CommandKind.VolumeDown);

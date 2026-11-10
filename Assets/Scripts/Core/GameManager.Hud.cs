@@ -233,13 +233,14 @@ public partial class GameManager
         var footer = new GUIStyle(bigStyle) { fontSize = 18 };
         // 언어 전환 안내는 바꿀 언어의 글자로 보여준다.
         GUI.Label(new Rect(0, h - 100, w, 30), Ko
-            ? $"<color=#99ddff>영혼석 {SoulStones}</color>   <color=#aaaaaa>U 키: 영구 강화   L 키: English   M 키: 음소거   [ ] 음량</color>"
-            : $"<color=#99ddff>Soul Stones {SoulStones}</color>   <color=#aaaaaa>U key: Upgrades   L key: 한국어   M key: Mute   [ ] Volume</color>", footer);
+            ? $"<color=#99ddff>영혼석 {SoulStones}</color>   <color=#aaaaaa>U 키: 영구 강화   T 키: 기록   L 키: English   M 키: 음소거   [ ] 음량</color>"
+            : $"<color=#99ddff>Soul Stones {SoulStones}</color>   <color=#aaaaaa>U key: Upgrades   T key: Records   L key: 한국어   M key: Mute   [ ] Volume</color>", footer);
         int best = PlayerPrefs.GetInt(BestDepthKey, 0);
         if (best > 0)
             GUI.Label(new Rect(0, h - 70, w, 30), $"<color=#ffd966>{(Ko ? "최고 기록" : "Best")}: {FloorName(best)}</color>", footer);
 
         if (metaOpen) DrawMeta(w, h);
+        if (recordsOpen) DrawRecords(w, h);
     }
 
     void DrawMinimap(float w)

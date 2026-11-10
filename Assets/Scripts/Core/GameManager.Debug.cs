@@ -194,6 +194,13 @@ public partial class GameManager
         yield return Capture(basePath + "_meta.png");
         yield return new WaitForSeconds(0.2f);
         metaOpen = false;
+        // 기록 화면: 실제 저장된 기록과, 열 판을 꽉 채운 예시(저장하지 않음)를 각각 찍는다.
+        OpenRecords();
+        yield return Capture(basePath + "_records.png");
+        recordsPreview = SampleRecords();
+        yield return Capture(basePath + "_records_sample.png");
+        recordsPreview = null;
+        recordsOpen = false;
 
         BeginDebugRun(debugClass ?? (PlayerClass)Random.Range(0, GameData.Classes.Length));
         yield return new WaitForSeconds(0.5f);

@@ -116,6 +116,7 @@ public partial class GameManager
     {
         choosingClass = true;
         metaOpen = false;
+        recordsOpen = false;
         gameOver = false;
         if (player != null) Destroy(player.gameObject);
         if (floorRoot != null) Destroy(floorRoot.gameObject);
@@ -126,7 +127,9 @@ public partial class GameManager
     void HandleClassSelectInput(PlayerCommand cmd)
     {
         if (metaOpen) { HandleMetaInput(cmd); return; }
+        if (recordsOpen) { HandleRecordsInput(cmd); return; }
         if (cmd.Kind == CommandKind.Meta) { OpenMeta(); return; }
+        if (cmd.Kind == CommandKind.Records) { OpenRecords(); return; }
         if (cmd.Kind == CommandKind.Language) { Loc.Toggle(); Play(Sfx.UiMove); return; }
         if (cmd.Kind == CommandKind.UseItem && !cmd.FromPotionKey && cmd.Slot < GameData.Classes.Length)
             BeginRun(GameData.Classes[cmd.Slot].Id);

@@ -205,7 +205,7 @@ public partial class GameManager
             case TrapKind.Spike:
                 Log(Ko ? $"<color=#ff7777>{name}{Josa(name, "을", "를")} 밟았다!</color>" : $"<color=#ff7777>You step on {Loc.A(name)}!</color>");
                 Play(Sfx.Trap);
-                DealDamage(player, 3 + depth, Ko ? name : Loc.A(name));
+                DealDamage(player, 3 + depth, Ko ? name : Loc.A(name), sourceKey: "trap:" + trap.Kind);
                 break;
 
             case TrapKind.Alarm:
