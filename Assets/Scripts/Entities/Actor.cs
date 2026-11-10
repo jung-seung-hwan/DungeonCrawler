@@ -92,7 +92,7 @@ public class Actor : MonoBehaviour
     {
         // 픽셀아트가 있으면 그 그림을 그대로, 없으면 기본 동그라미에 몬스터 색을 입힌다.
         var art = PixelArt.Get(t.Name);
-        var actor = Create(t.Name, art != null ? art : SpriteFactory.Creature, art != null ? Color.white : t.Color, 2, parent);
+        var actor = Create(t.DisplayName, art != null ? art : SpriteFactory.Creature, art != null ? Color.white : t.Color, 2, parent);
         // 출현 층보다 깊을수록 강해진다. 깊은 층일수록 성장 폭도 커진다.
         int bonus = depth - t.MinDepth;
         actor.MaxHp = actor.Hp = t.Hp + bonus * 4 + bonus * bonus / 5;

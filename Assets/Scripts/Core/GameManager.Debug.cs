@@ -8,6 +8,7 @@ using UnityEngine;
 //   -simulate <횟수>    화면 없이 여러 판을 빠르게 돌려 도달 층수 통계를 로그에 남기고 종료 (밸런스 확인용)
 //   -startdepth <층>    해당 층에서, 그 층에 맞게 성장한 상태로 시작
 //   -class <직업>       warrior / rogue / mage 중 하나로 고정 (없으면 시뮬레이션은 직업을 돌아가며, 스크린샷은 무작위)
+//   -lang <ko|en>      언어 고정 (저장된 선택은 바꾸지 않는다. GameManager.Awake에서 읽는다)
 public partial class GameManager
 {
     const int SimMaxStepsPerRun = 8000;

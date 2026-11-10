@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public enum CommandKind { None, Move, Wait, UseItem, Descend, Restart, Cancel, Skill, ToggleHelp, Meta }
+public enum CommandKind { None, Move, Wait, UseItem, Descend, Restart, Cancel, Skill, ToggleHelp, Meta, Language }
 
 public struct PlayerCommand
 {
@@ -47,6 +47,7 @@ public class InputReader
         if (Input.GetKeyDown(KeyCode.R)) return new PlayerCommand(CommandKind.Restart);
         if (Input.GetKeyDown(KeyCode.Tab)) return new PlayerCommand(CommandKind.ToggleHelp);
         if (Input.GetKeyDown(KeyCode.U)) return new PlayerCommand(CommandKind.Meta);
+        if (Input.GetKeyDown(KeyCode.L)) return new PlayerCommand(CommandKind.Language);
         if (Input.GetKeyDown(KeyCode.X)) return new PlayerCommand(CommandKind.Skill);
         if (Input.GetKeyDown(KeyCode.H)) return new PlayerCommand(CommandKind.UseItem, slot: 0) { FromPotionKey = true };
         for (int i = 0; i < SlotKeys.Length; i++)

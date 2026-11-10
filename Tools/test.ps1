@@ -4,22 +4,24 @@
 param(
     [ValidateSet("shot", "sim")] [string]$Mode = "shot",
     [int]$Count = 30,
-    [int]$StartDepth = 1
+    [int]$StartDepth = 1,
+    [ValidateSet("", "ko", "en")] [string]$Lang = ""   # 언어 고정(저장된 선택은 바꾸지 않음). shot은 Builds\shot_<언어>_*.png 로 저장
 )
 $project = Split-Path $PSScriptRoot -Parent
 $exe = Join-Path $project "Builds\Windows\DungeonCrawler.exe"
 $depthArgs = if ($StartDepth -gt 1) { "-startdepth $StartDepth" } else { "" }
+$langArgs = if ($Lang) { "-lang $Lang" } else { "" }
 
 if ($Mode -eq "shot") {
-    $base = Join-Path $project "Builds\shot"
+    $base = Join-Path $project $(if ($Lang) { "Builds\shot_$Lang" } else { "Builds\shot" })
     Remove-Item "$base*.png" -ErrorAction SilentlyContinue
     $log = Join-Path $project "Builds\shot.log"
-    $p = Start-Process $exe -ArgumentList "-screen-width 1280 -screen-height 720 -screen-fullscreen 0 -logFile `"$log`" $depthArgs -autoshot `"$base`"" -PassThru
+    $p = Start-Process $exe -ArgumentList "-screen-width 1280 -screen-height 720 -screen-fullscreen 0 -logFile `"$log`" $depthArgs $langArgs -autoshot `"$base`"" -PassThru
     if (-not $p.WaitForExit(180000)) { $p.Kill(); "timeout" }
     Get-ChildItem "$base*.png" | ForEach-Object { $_.FullName }
 } else {
     $log = Join-Path $project "Builds\sim.log"
-    $p = Start-Process $exe -ArgumentList "-batchmode -nographics -logFile `"$log`" $depthArgs -simulate $Count" -PassThru
+    $p = Start-Process $exe -ArgumentList "-batchmode -nographics -logFile `"$log`" $depthArgs $langArgs -simulate $Count" -PassThru
     if (-not $p.WaitForExit(600000)) { $p.Kill(); "timeout" }
 }
 Select-String -Path $log -Pattern "\[SIM\]|\[AUTOSHOT\]|\[SHOT\]|\[PERF\]|Exception" | ForEach-Object { $_.Line }

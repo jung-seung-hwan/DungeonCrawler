@@ -42,7 +42,9 @@ public partial class GameManager
             var tile = map.Get(player.Pos);
             if (tile == TileType.Altar) UseAltar();
             else if (tile == TileType.Stairs)
-                Log(StairsSealed ? "계단이 봉인되어 있다. 보스를 쓰러뜨려야 한다." : "계단을 발견했다. F 키로 내려갈 수 있다.");
+                Log(StairsSealed
+                    ? (Ko ? "계단이 봉인되어 있다. 보스를 쓰러뜨려야 한다." : "The stairs are sealed. Defeat the boss first.")
+                    : (Ko ? "계단을 발견했다. F 키로 내려갈 수 있다." : "You found the stairs. Press F to descend."));
         }
         EndPlayerTurn();
     }
@@ -51,12 +53,13 @@ public partial class GameManager
     {
         if (map.Get(player.Pos) != TileType.Stairs)
         {
-            Log("여기에는 계단이 없다.");
+            Log(Ko ? "여기에는 계단이 없다." : "There are no stairs here.");
             return;
         }
         if (StairsSealed)
         {
-            Log($"계단이 봉인되어 있다. {boss.DisplayName}{Josa(boss.DisplayName, "을", "를")} 쓰러뜨려야 한다.");
+            Log(Ko ? $"계단이 봉인되어 있다. {boss.DisplayName}{Josa(boss.DisplayName, "을", "를")} 쓰러뜨려야 한다."
+                   : $"The stairs are sealed. Defeat the {boss.DisplayName} first.");
             return;
         }
 
@@ -68,7 +71,9 @@ public partial class GameManager
             showHelp = false;
         }
         Play(Sfx.Stairs);
-        Log(IsBossFloor ? $"<color=#ffcc44>지하 {depth}층 — 보스 층이다!</color>" : $"지하 {depth}층으로 내려갔다.");
+        Log(IsBossFloor
+            ? (Ko ? $"<color=#ffcc44>지하 {depth}층 — 보스 층이다!</color>" : $"<color=#ffcc44>Floor {depth} — a boss floor!</color>")
+            : (Ko ? $"지하 {depth}층으로 내려갔다." : $"You descend to floor {depth}."));
         BuildFloor();
     }
 
@@ -129,7 +134,7 @@ public partial class GameManager
             if (!enemy.FleeAnnounced)
             {
                 enemy.FleeAnnounced = true;
-                Log($"{enemy.DisplayName}{Josa(enemy.DisplayName, "이", "가")} 겁에 질려 도망친다!");
+                Log(Ko ? $"{enemy.DisplayName}{Josa(enemy.DisplayName, "이", "가")} 겁에 질려 도망친다!" : $"The {enemy.DisplayName} flees in terror!");
             }
             if (StepAwayFromPlayer(enemy)) return;
             // 막다른 곳에 몰리면 싸운다.
@@ -174,7 +179,7 @@ public partial class GameManager
             other.LastKnownTarget = player.Pos;
             alerted = true;
         }
-        if (alerted) Log($"{caller.DisplayName}{Josa(caller.DisplayName, "이", "가")} 소리쳐 동료를 부른다!");
+        if (alerted) Log(Ko ? $"{caller.DisplayName}{Josa(caller.DisplayName, "이", "가")} 소리쳐 동료를 부른다!" : $"The {caller.DisplayName} shouts for its allies!");
     }
 
     bool TryMove(Actor enemy, Vector2Int cell)
@@ -208,7 +213,7 @@ public partial class GameManager
         if (enemies.Count(e => e.Master == summoner) >= MaxMinionsPerSummoner) return false;
         if (SpawnMinions(summoner, GameData.Skeleton, 1, depth - 3) == 0) return false;
 
-        Log($"{summoner.DisplayName}{Josa(summoner.DisplayName, "이", "가")} 해골을 불러냈다!");
+        Log(Ko ? $"{summoner.DisplayName}{Josa(summoner.DisplayName, "이", "가")} 해골을 불러냈다!" : $"The {summoner.DisplayName} raises a skeleton!");
         return true;
     }
 
@@ -241,16 +246,19 @@ public partial class GameManager
         if (!quiet)
         {
             if (ambush)
-                Log($"<color=#99ff99>기습!</color> {name}에게 {damage} 피해!");
+                Log(Ko ? $"<color=#99ff99>기습!</color> {name}에게 {damage} 피해!" : $"<color=#99ff99>Ambush!</color> {damage} damage to the {name}!");
+            else if (attacker.IsPlayer && crit)
+                Log(Ko ? $"<color=#ffdd55>치명타!</color> {name}에게 {damage} 피해!" : $"<color=#ffdd55>Critical hit!</color> {damage} damage to the {name}!");
             else if (attacker.IsPlayer)
-                Log(crit ? $"<color=#ffdd55>치명타!</color> {name}에게 {damage} 피해!" : $"{name}{Josa(name, "을", "를")} 공격해 {damage} 피해를 입혔다.");
+                Log(Ko ? $"{name}{Josa(name, "을", "를")} 공격해 {damage} 피해를 입혔다." : $"You hit the {name} for {damage} damage.");
             else
-                Log($"<color=#ff9a8a>{attacker.DisplayName}의 {verb ?? "공격"}! {damage} 피해를 받았다.</color>");
+                Log(Ko ? $"<color=#ff9a8a>{attacker.DisplayName}의 {verb ?? "공격"}! {damage} 피해를 받았다.</color>"
+                       : $"<color=#ff9a8a>The {attacker.DisplayName}'s {verb ?? "attack"}! You take {damage} damage.</color>");
         }
-        if (ambush) BreakStealth("기습과 함께 모습을 드러냈다.");
+        if (ambush) BreakStealth(Ko ? "기습과 함께 모습을 드러냈다." : "Your ambush gives you away.");
 
         if (!defender.IsPlayer) Play(crit || ambush ? Sfx.Crit : Sfx.Hit);
-        DealDamage(defender, damage, attacker.DisplayName, crit || ambush, attacker.Pos);
+        DealDamage(defender, damage, Ko ? attacker.DisplayName : "the " + attacker.DisplayName, crit || ambush, attacker.Pos);
 
         if (attacker.IsPlayer && Lifesteal > 0 && !gameOver)
         {
@@ -309,8 +317,9 @@ public partial class GameManager
             enemy.Enraged = true;
             enemy.Attack += Mathf.Max(2, enemy.Attack / 2);
             enemy.SetBaseColor(new Color(1f, 0.55f, 0.5f));
-            AddFloatingText(enemy.transform.position, "격노!", new Color(1f, 0.4f, 0.2f), 1.2f);
-            Log($"<color=#ff8855>{enemy.DisplayName}{Josa(enemy.DisplayName, "이", "가")} 격노했다! 공격력이 크게 올랐다.</color>");
+            AddFloatingText(enemy.transform.position, Ko ? "격노!" : "Enraged!", new Color(1f, 0.4f, 0.2f), 1.2f);
+            Log(Ko ? $"<color=#ff8855>{enemy.DisplayName}{Josa(enemy.DisplayName, "이", "가")} 격노했다! 공격력이 크게 올랐다.</color>"
+                   : $"<color=#ff8855>The {enemy.DisplayName} is enraged! Its attack rises sharply.</color>");
         }
 
         if (enemy.Splits && enemy.Hp >= 4)
@@ -334,7 +343,7 @@ public partial class GameManager
                 clone.SetVisible(map.IsVisible(cell));
                 enemies.Add(clone);
 
-                Log($"{enemy.DisplayName}{Josa(enemy.DisplayName, "이", "가")} 둘로 갈라졌다!");
+                Log(Ko ? $"{enemy.DisplayName}{Josa(enemy.DisplayName, "이", "가")} 둘로 갈라졌다!" : $"The {enemy.DisplayName} splits in two!");
                 return;
             }
         }
@@ -354,7 +363,8 @@ public partial class GameManager
             if (autopilotActive)
                 Debug.Log($"[BOSS] {target.DisplayName} down on turn {turnsOnFloor} of floor; player {playerClass.Name} " +
                           $"hp {player.Hp}/{player.MaxHp}, atk {player.Attack}, def {player.Defense}, boss atk {target.Attack} def {target.Defense}");
-            Log($"<color=#ffcc44>★ {target.DisplayName}{Josa(target.DisplayName, "을", "를")} 쓰러뜨렸다! 계단의 봉인이 풀렸다.</color>");
+            Log(Ko ? $"<color=#ffcc44>★ {target.DisplayName}{Josa(target.DisplayName, "을", "를")} 쓰러뜨렸다! 계단의 봉인이 풀렸다.</color>"
+                   : $"<color=#ffcc44>★ The {target.DisplayName} is defeated! The seal on the stairs is broken.</color>");
             Shake(0.5f, 0.3f);
             ClearSlamWarnings();
             DropEquipment(EquipmentFactory.Generate(rng, depth, Rarity.Rare), target.Pos);
@@ -363,7 +373,8 @@ public partial class GameManager
         }
         else
         {
-            Log($"{target.DisplayName}{Josa(target.DisplayName, "을", "를")} 쓰러뜨렸다! (+{target.XpReward} XP)");
+            Log(Ko ? $"{target.DisplayName}{Josa(target.DisplayName, "을", "를")} 쓰러뜨렸다! (+{target.XpReward} XP)"
+                   : $"You defeated the {target.DisplayName}! (+{target.XpReward} XP)");
             if (rng.NextDouble() < 0.12) DropItem(GameData.RollItem(rng), target.Pos);
         }
 
@@ -383,7 +394,7 @@ public partial class GameManager
             enemies.Remove(minion);
             Destroy(minion.gameObject);
         }
-        if (minions.Count > 0) Log("주인을 잃은 부하들이 흩어져 사라진다.");
+        if (minions.Count > 0) Log(Ko ? "주인을 잃은 부하들이 흩어져 사라진다." : "With their master gone, the minions scatter and vanish.");
 
         GainXp(target.XpReward);
     }
@@ -404,7 +415,8 @@ public partial class GameManager
             PlayerPrefs.SetInt(BestDepthKey, bestDepth);
             PlayerPrefs.Save();
         }
-        Log($"당신은 지하 {depth}층에서 {killer}에 의해 쓰러졌다... R 키로 다시 시작");
+        Log(Ko ? $"당신은 지하 {depth}층에서 {killer}에 의해 쓰러졌다... R 키로 다시 시작"
+               : $"You were slain by {killer} on floor {depth}... Press R to restart");
     }
 
     void GainXp(int amount)
@@ -418,7 +430,8 @@ public partial class GameManager
             player.Hp = player.MaxHp;
             Play(Sfx.LevelUp);
             AddFloatingText(player.transform.position, "LEVEL UP!", new Color(0.5f, 1f, 0.5f), 1.3f);
-            Log($"<color=#88ff88>레벨 업! Lv.{level}</color> — 체력 회복, 최대 체력 +{playerClass.HpPerLevel}, 공격력 +1");
+            Log(Ko ? $"<color=#88ff88>레벨 업! Lv.{level}</color> — 체력 회복, 최대 체력 +{playerClass.HpPerLevel}, 공격력 +1"
+                   : $"<color=#88ff88>Level up! Lv.{level}</color> — HP restored, max HP +{playerClass.HpPerLevel}, attack +1");
         }
     }
 }

@@ -33,7 +33,8 @@ public partial class GameManager
                 if (count > 0) // 빈칸이 없어 실패하면 다음 행동 때 다시 시도한다.
                 {
                     boss.SummonPhase = phase;
-                    Log($"<color=#ffcc44>{boss.DisplayName}{Josa(boss.DisplayName, "이", "가")} 부하들을 불러 모은다!</color>");
+                    Log(Ko ? $"<color=#ffcc44>{boss.DisplayName}{Josa(boss.DisplayName, "이", "가")} 부하들을 불러 모은다!</color>"
+                           : $"<color=#ffcc44>The {boss.DisplayName} calls its minions!</color>");
                     Shake(0.25f, 0.15f);
                     return true;
                 }
@@ -45,8 +46,9 @@ public partial class GameManager
             boss.Frenzied = true;
             boss.Speed = 2;
             boss.SetBaseColor(new Color(1f, 0.5f, 0.5f));
-            AddFloatingText(boss.transform.position, "광폭화!", new Color(1f, 0.3f, 0.2f), 1.5f);
-            Log($"<color=#ff5544>{boss.DisplayName}{Josa(boss.DisplayName, "이", "가")} 광폭화했다! 두 배로 빠르게 움직인다!</color>");
+            AddFloatingText(boss.transform.position, Ko ? "광폭화!" : "Frenzy!", new Color(1f, 0.3f, 0.2f), 1.5f);
+            Log(Ko ? $"<color=#ff5544>{boss.DisplayName}{Josa(boss.DisplayName, "이", "가")} 광폭화했다! 두 배로 빠르게 움직인다!</color>"
+                   : $"<color=#ff5544>The {boss.DisplayName} goes into a frenzy! It moves twice as fast!</color>");
             Shake(0.4f, 0.25f);
         }
 
@@ -59,7 +61,8 @@ public partial class GameManager
             boss.SlamChargedTurn = turn;
             boss.SlamCooldown = SlamCooldownTurns;
             ShowSlamWarning(boss, t.SlamRadius);
-            Log($"<color=#ff7755>{boss.DisplayName}{Josa(boss.DisplayName, "이", "가")} 거대한 일격을 준비한다! 붉은 범위에서 벗어나라!</color>");
+            Log(Ko ? $"<color=#ff7755>{boss.DisplayName}{Josa(boss.DisplayName, "이", "가")} 거대한 일격을 준비한다! 붉은 범위에서 벗어나라!</color>"
+                   : $"<color=#ff7755>The {boss.DisplayName} winds up a massive blow! Get out of the red zone!</color>");
             input.CancelRepeat();
             return true;
         }
@@ -74,7 +77,8 @@ public partial class GameManager
                 boss.BlinkCooldown = BlinkCooldownTurns;
                 boss.SetPos(cell, snap: true);
                 Play(Sfx.Magic);
-                Log($"{boss.DisplayName}{Josa(boss.DisplayName, "이", "가")} 순간이동해 눈앞에 나타났다!");
+                Log(Ko ? $"{boss.DisplayName}{Josa(boss.DisplayName, "이", "가")} 순간이동해 눈앞에 나타났다!"
+                       : $"The {boss.DisplayName} teleports right in front of you!");
                 return true;
             }
         }
@@ -119,14 +123,14 @@ public partial class GameManager
 
         if (Pathfinder.Distance(boss.Pos, player.Pos) <= boss.Template.SlamRadius)
         {
-            Attack(boss, player, "내려찍기", SlamMultiplier, animate: false);
+            Attack(boss, player, Ko ? "내려찍기" : "slam", SlamMultiplier, animate: false);
             boss.PlayAttack(player.Pos, 0.6f);
             Effects.Slash(boss.Pos, player.Pos, new Color(1f, 0.4f, 0.3f), 2f);
         }
         else
         {
-            Log($"{boss.DisplayName}의 내려찍기! 아슬아슬하게 피했다!");
-            AddFloatingText(player.transform.position, "회피!", new Color(0.6f, 1f, 1f));
+            Log(Ko ? $"{boss.DisplayName}의 내려찍기! 아슬아슬하게 피했다!" : $"The {boss.DisplayName}'s slam! You barely dodge it!");
+            AddFloatingText(player.transform.position, Ko ? "회피!" : "Dodge!", new Color(0.6f, 1f, 1f));
         }
     }
 

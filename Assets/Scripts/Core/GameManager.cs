@@ -54,6 +54,7 @@ public partial class GameManager : MonoBehaviour
 
     void Awake()
     {
+        Loc.Init(TryGetArg("-lang", out var lang) ? lang : null);
         SetupCamera();
         audioSource = gameObject.AddComponent<AudioSource>();
         ShowClassSelect();
@@ -128,12 +129,13 @@ public partial class GameManager : MonoBehaviour
         inventory[ItemKind.HealthPotion] = 2 + MetaBonus(MetaUpgrade.Potion);
 
         if (player != null) Destroy(player.gameObject);
-        player = Actor.Create("당신", SpriteFactory.Player, Color.white, 3, transform);
+        player = Actor.Create(Ko ? "당신" : "You", SpriteFactory.Player, Color.white, 3, transform);
         player.IsPlayer = true;
         ApplyClass(playerClassId);
 
-        Log($"{playerClass.Name}{Josa(playerClass.Name, "으로", "로")} 던전에 들어섰다. 노란 계단을 찾아 더 깊이 내려가자!");
-        Log($"X 키: {playerClass.SkillName} — {playerClass.SkillDesc}");
+        Log(Ko ? $"{playerClass.Name}{Josa(playerClass.Name, "으로", "로")} 던전에 들어섰다. 노란 계단을 찾아 더 깊이 내려가자!"
+               : $"You enter the dungeon as a {playerClass.Name}. Find the yellow stairs and go deeper!");
+        Log(Ko ? $"X 키: {playerClass.SkillName} — {playerClass.SkillDesc}" : $"X key: {playerClass.SkillName} — {playerClass.SkillDesc}");
         BuildFloor();
     }
 
@@ -227,7 +229,7 @@ public partial class GameManager : MonoBehaviour
         }
         boss.SetPos(pos, snap: true);
         enemies.Add(boss);
-        Log($"강력한 기운이 느껴진다... 계단이 봉인되어 있다.");
+        Log(Ko ? "강력한 기운이 느껴진다... 계단이 봉인되어 있다." : "You sense a powerful presence... The stairs are sealed.");
     }
 
     // ───────────────────────── 보조 함수 ─────────────────────────
@@ -244,12 +246,13 @@ public partial class GameManager : MonoBehaviour
                 if (enemy.IsBoss && !bossSeen)
                 {
                     bossSeen = true;
-                    Log($"<color=#ffcc44>보스 {enemy.DisplayName}{Josa(enemy.DisplayName, "이", "가")} 나타났다!</color>");
+                    Log(Ko ? $"<color=#ffcc44>보스 {enemy.DisplayName}{Josa(enemy.DisplayName, "이", "가")} 나타났다!</color>"
+                           : $"<color=#ffcc44>A boss appears: the {enemy.DisplayName}!</color>");
                     Shake(0.4f, 0.25f);
                 }
                 else if (!enemy.IsBoss)
                 {
-                    Log($"{enemy.DisplayName}{Josa(enemy.DisplayName, "이", "가")} 나타났다!");
+                    Log(Ko ? $"{enemy.DisplayName}{Josa(enemy.DisplayName, "이", "가")} 나타났다!" : $"{Cap(Loc.A(enemy.DisplayName))} appears!");
                 }
             }
             enemy.SetVisible(isVisible);
@@ -283,7 +286,11 @@ public partial class GameManager : MonoBehaviour
 
     int Count(ItemKind kind) => inventory.TryGetValue(kind, out var n) ? n : 0;
 
-    // 받침 유무에 따라 조사(이/가, 을/를)를 고른다.
+    static bool Ko => Loc.IsKorean;
+
+    static string Cap(string s) => char.ToUpperInvariant(s[0]) + s.Substring(1);
+
+    // 받침 유무에 따라 조사(이/가, 을/를)를 고른다. 한국어 문장에서만 쓴다.
     static string Josa(string word, string withBatchim, string withoutBatchim)
     {
         char last = word[^1];
