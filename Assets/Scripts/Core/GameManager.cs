@@ -9,6 +9,7 @@ using UnityEngine;
 //   GameManager.Rooms.cs   특수 방(보물 창고, 제단), 함정
 //   GameManager.Shop.cs    상인, 상점
 //   GameManager.Hud.cs     HUD, 미니맵, 데미지 숫자, 화면 흔들림
+//   GameManager.Meta.cs    영구 성장(영혼석, 영구 강화)
 //   GameManager.Debug.cs   자동 플레이 봇, 스크린샷, 밸런스 시뮬레이션
 public partial class GameManager : MonoBehaviour
 {
@@ -111,6 +112,8 @@ public partial class GameManager : MonoBehaviour
         level = 1;
         xp = 0;
         kills = 0;
+        bossKills = 0;
+        soulStonesEarned = 0;
         turn = 0;
         gold = 0;
         gameOver = false;
@@ -122,7 +125,7 @@ public partial class GameManager : MonoBehaviour
         log.Clear();
         floatingTexts.Clear();
         inventory.Clear();
-        inventory[ItemKind.HealthPotion] = 2;
+        inventory[ItemKind.HealthPotion] = 2 + MetaBonus(MetaUpgrade.Potion);
 
         if (player != null) Destroy(player.gameObject);
         player = Actor.Create("당신", SpriteFactory.Player, Color.white, 3, transform);

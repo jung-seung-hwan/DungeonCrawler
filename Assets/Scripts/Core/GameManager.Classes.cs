@@ -29,7 +29,7 @@ public partial class GameManager
     float PlayerCrit => playerClass.Crit + Equipped.Where(e => e != null).Sum(e => e.Crit);
     float Lifesteal => Equipped.Where(e => e != null).Sum(e => e.Lifesteal);
     float Thorns => Equipped.Where(e => e != null).Sum(e => e.Thorns);
-    float GoldBonus => Equipped.Where(e => e != null).Sum(e => e.GoldBonus);
+    float GoldBonus => Equipped.Where(e => e != null).Sum(e => e.GoldBonus) + MetaBonus(MetaUpgrade.Greed) / 100f;
     float ScrollPower => playerClass.Id == PlayerClass.Mage ? 1.5f : 1f;
 
     int RegenInterval
@@ -113,6 +113,7 @@ public partial class GameManager
     void ShowClassSelect()
     {
         choosingClass = true;
+        metaOpen = false;
         gameOver = false;
         if (player != null) Destroy(player.gameObject);
         if (floorRoot != null) Destroy(floorRoot.gameObject);
@@ -122,6 +123,8 @@ public partial class GameManager
 
     void HandleClassSelectInput(PlayerCommand cmd)
     {
+        if (metaOpen) { HandleMetaInput(cmd); return; }
+        if (cmd.Kind == CommandKind.Meta) { OpenMeta(); return; }
         if (cmd.Kind == CommandKind.UseItem && !cmd.FromPotionKey && cmd.Slot < GameData.Classes.Length)
             BeginRun(GameData.Classes[cmd.Slot].Id);
     }
@@ -129,9 +132,9 @@ public partial class GameManager
     void ApplyClass(PlayerClass id)
     {
         playerClass = GameData.ClassOf(id);
-        baseMaxHp = playerClass.Hp;
-        baseAttack = playerClass.Attack;
-        baseDefense = playerClass.Defense;
+        baseMaxHp = playerClass.Hp + MetaBonus(MetaUpgrade.Vitality);
+        baseAttack = playerClass.Attack + MetaBonus(MetaUpgrade.Might);
+        baseDefense = playerClass.Defense + MetaBonus(MetaUpgrade.Guard);
         weapon = armor = ring = null;
         skillCooldown = 0;
         stealthTurns = 0;

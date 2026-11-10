@@ -189,6 +189,10 @@ public partial class GameManager
         yield return new WaitForSeconds(0.5f);
         yield return Capture(basePath + "_select.png");
         yield return new WaitForSeconds(0.2f);
+        OpenMeta();
+        yield return Capture(basePath + "_meta.png");
+        yield return new WaitForSeconds(0.2f);
+        metaOpen = false;
 
         BeginDebugRun(debugClass ?? (PlayerClass)Random.Range(0, GameData.Classes.Length));
         yield return new WaitForSeconds(0.5f);

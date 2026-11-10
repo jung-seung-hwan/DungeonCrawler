@@ -212,16 +212,21 @@ public partial class GameManager
             GUI.Label(new Rect(x + 20, y + 16, cw - 40, 34), $"<color=#{hex}><b>{c.Name}</b></color>   <color=#888888>{i + 1}번 키</color>",
                 new GUIStyle(textStyle) { fontSize = 26 });
             GUI.Label(new Rect(x + 20, y + 62, cw - 40, 26),
-                $"체력 {c.Hp}   공격 {c.Attack}   방어 {c.Defense}   치명 {c.Crit * 100:0}%", body);
+                $"체력 {c.Hp + MetaBonus(MetaUpgrade.Vitality)}   공격 {c.Attack + MetaBonus(MetaUpgrade.Might)}   " +
+                $"방어 {c.Defense + MetaBonus(MetaUpgrade.Guard)}   치명 {c.Crit * 100:0}%", body);
             GUI.Label(new Rect(x + 20, y + 104, cw - 40, 26), $"<color=#{hex}>스킬: {c.SkillName}</color>  <color=#888888>(쿨다운 {c.SkillCooldown}턴)</color>", body);
             GUI.Label(new Rect(x + 20, y + 132, cw - 40, 90), $"<color=#cccccc>{c.SkillDesc}</color>", body);
             GUI.Label(new Rect(x + 20, y + 234, cw - 40, 26), $"<color=#{hex}>특성</color>", body);
             GUI.Label(new Rect(x + 20, y + 262, cw - 40, 80), $"<color=#cccccc>{c.Passive}</color>", body);
         }
 
+        var footer = new GUIStyle(bigStyle) { fontSize = 18 };
+        GUI.Label(new Rect(0, h - 100, w, 30), $"<color=#99ddff>영혼석 {SoulStones}</color>   <color=#aaaaaa>U 키: 영구 강화</color>", footer);
         int best = PlayerPrefs.GetInt(BestDepthKey, 0);
         if (best > 0)
-            GUI.Label(new Rect(0, h - 70, w, 30), $"<color=#ffd966>최고 기록: 지하 {best}층</color>", new GUIStyle(bigStyle) { fontSize = 18 });
+            GUI.Label(new Rect(0, h - 70, w, 30), $"<color=#ffd966>최고 기록: 지하 {best}층</color>", footer);
+
+        if (metaOpen) DrawMeta(w, h);
     }
 
     void DrawMinimap(float w)
@@ -302,7 +307,8 @@ public partial class GameManager
         GUI.Label(new Rect(0, h / 2 - 16, w, 36), $"사인: {killedBy}", small);
         string record = newRecord ? "<color=#ffdd55>★ 최고 기록 갱신! ★</color>" : $"최고 기록: 지하 {bestDepth}층";
         GUI.Label(new Rect(0, h / 2 + 22, w, 36), record, small);
-        GUI.Label(new Rect(0, h / 2 + 70, w, 36), "R 키를 눌러 다시 시작", small);
+        GUI.Label(new Rect(0, h / 2 + 56, w, 36), $"<color=#99ddff>영혼석 +{soulStonesEarned}</color>  (보유 {SoulStones})", small);
+        GUI.Label(new Rect(0, h / 2 + 104, w, 36), "R 키를 눌러 다시 시작", small);
     }
 
     void DrawFloatingTexts(float scale)
