@@ -50,6 +50,7 @@ public partial class GameManager
             Log(Ko ? $"<color=#ff5544>{boss.DisplayName}{Josa(boss.DisplayName, "이", "가")} 광폭화했다! 두 배로 빠르게 움직인다!</color>"
                    : $"<color=#ff5544>The {boss.DisplayName} goes into a frenzy! It moves twice as fast!</color>");
             Shake(0.4f, 0.25f);
+            Play(Sfx.Frenzy);
         }
 
         if (!seesPlayer) return false;
@@ -61,6 +62,7 @@ public partial class GameManager
             boss.SlamChargedTurn = turn;
             boss.SlamCooldown = SlamCooldownTurns;
             ShowSlamWarning(boss, t.SlamRadius);
+            Play(Sfx.SlamWarn);
             Log(Ko ? $"<color=#ff7755>{boss.DisplayName}{Josa(boss.DisplayName, "이", "가")} 거대한 일격을 준비한다! 붉은 범위에서 벗어나라!</color>"
                    : $"<color=#ff7755>The {boss.DisplayName} winds up a massive blow! Get out of the red zone!</color>");
             input.CancelRepeat();
@@ -76,7 +78,7 @@ public partial class GameManager
             {
                 boss.BlinkCooldown = BlinkCooldownTurns;
                 boss.SetPos(cell, snap: true);
-                Play(Sfx.Magic);
+                Play(Sfx.Blink);
                 Log(Ko ? $"{boss.DisplayName}{Josa(boss.DisplayName, "이", "가")} 순간이동해 눈앞에 나타났다!"
                        : $"The {boss.DisplayName} teleports right in front of you!");
                 return true;
@@ -118,7 +120,7 @@ public partial class GameManager
         boss.SlamCharging = false;
         ClearSlamWarnings();
         Shake(0.35f, 0.3f);
-        Play(Sfx.Kill);
+        Play(Sfx.Slam);
         Effects.Burst(boss.transform.position, new Color(0.6f, 0.55f, 0.5f), 18); // 바닥을 내려칠 때 튀는 흙먼지
 
         if (Pathfinder.Distance(boss.Pos, player.Pos) <= boss.Template.SlamRadius)
@@ -131,6 +133,7 @@ public partial class GameManager
         {
             Log(Ko ? $"{boss.DisplayName}의 내려찍기! 아슬아슬하게 피했다!" : $"The {boss.DisplayName}'s slam! You barely dodge it!");
             AddFloatingText(player.transform.position, Ko ? "회피!" : "Dodge!", new Color(0.6f, 1f, 1f));
+            Play(Sfx.Dodge);
         }
     }
 
@@ -154,7 +157,7 @@ public partial class GameManager
             enemies.Add(minion);
             spawned++;
         }
-        if (spawned > 0) Play(Sfx.Magic);
+        if (spawned > 0) Play(Sfx.Summon);
         return spawned;
     }
 }

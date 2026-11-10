@@ -10,6 +10,7 @@ using UnityEngine;
 //   GameManager.Shop.cs    상인, 상점
 //   GameManager.Hud.cs     HUD, 미니맵, 데미지 숫자, 화면 흔들림
 //   GameManager.Meta.cs    영구 성장(영혼석, 영구 강화)
+//   GameManager.Audio.cs   효과음 재생, 배경음악 전환, 음량·음소거
 //   GameManager.Debug.cs   자동 플레이 봇, 스크린샷, 밸런스 시뮬레이션
 public partial class GameManager : MonoBehaviour
 {
@@ -33,7 +34,6 @@ public partial class GameManager : MonoBehaviour
     Actor boss;
     Transform floorRoot;
     Camera cam;
-    AudioSource audioSource;
 
     int depth;
     int level;
@@ -56,16 +56,18 @@ public partial class GameManager : MonoBehaviour
     {
         Loc.Init(TryGetArg("-lang", out var lang) ? lang : null);
         SetupCamera();
-        audioSource = gameObject.AddComponent<AudioSource>();
+        SetupAudio();
         ShowClassSelect();
         StartDebugModes();
     }
 
     void Update()
     {
+        UpdateMusic();
         if (autopilotActive) return;
 
         var cmd = input.Read();
+        if (HandleSoundInput(cmd)) return;
 
         if (choosingClass)
         {
@@ -132,6 +134,7 @@ public partial class GameManager : MonoBehaviour
         player = Actor.Create(Ko ? "당신" : "You", SpriteFactory.Player, Color.white, 3, transform);
         player.IsPlayer = true;
         ApplyClass(playerClassId);
+        Play(Sfx.Start);
 
         Log(Ko ? $"{playerClass.Name}{Josa(playerClass.Name, "으로", "로")} 던전에 들어섰다. 노란 계단을 찾아 더 깊이 내려가자!"
                : $"You enter the dungeon as a {playerClass.Name}. Find the yellow stairs and go deeper!");
@@ -249,6 +252,7 @@ public partial class GameManager : MonoBehaviour
                     Log(Ko ? $"<color=#ffcc44>보스 {enemy.DisplayName}{Josa(enemy.DisplayName, "이", "가")} 나타났다!</color>"
                            : $"<color=#ffcc44>A boss appears: the {enemy.DisplayName}!</color>");
                     Shake(0.4f, 0.25f);
+                    Play(Sfx.BossAppear);
                 }
                 else if (!enemy.IsBoss)
                 {
@@ -304,11 +308,6 @@ public partial class GameManager : MonoBehaviour
     {
         log.Add(message);
         if (log.Count > MaxLogLines) log.RemoveAt(0);
-    }
-
-    void Play(Sfx sfx, float volume = 1f)
-    {
-        if (audioSource != null) audioSource.PlayOneShot(SoundFx.Get(sfx), volume);
     }
 
     void SetupCamera()

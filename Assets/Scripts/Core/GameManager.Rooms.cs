@@ -111,6 +111,7 @@ public partial class GameManager
             if (message == null) continue;
             specialRoomsDiscovered++;
             Log(message);
+            Play(Sfx.Discover);
             input.CancelRepeat();
         }
     }
@@ -121,9 +122,9 @@ public partial class GameManager
     {
         map.SetTile(player.Pos, TileType.Floor);
         altarPos = null;
-        Play(Sfx.Magic);
 
         double roll = rng.NextDouble();
+        Play(roll < 0.15 ? Sfx.Curse : Sfx.Bless);
         if (roll < 0.15)
         {
             Log(Ko ? "<color=#ff7777>제단이 분노했다! 어둠 속에서 몬스터가 솟아난다!</color>"
@@ -203,6 +204,7 @@ public partial class GameManager
         {
             case TrapKind.Spike:
                 Log(Ko ? $"<color=#ff7777>{name}{Josa(name, "을", "를")} 밟았다!</color>" : $"<color=#ff7777>You step on {Loc.A(name)}!</color>");
+                Play(Sfx.Trap);
                 DealDamage(player, 3 + depth, Ko ? name : Loc.A(name));
                 break;
 
@@ -210,7 +212,7 @@ public partial class GameManager
                 Log(Ko ? "<color=#ffcc44>경보 함정! 요란한 종소리가 던전에 울려 퍼진다!</color>"
                        : "<color=#ffcc44>An alarm trap! A loud bell rings through the dungeon!</color>");
                 foreach (var enemy in enemies) enemy.LastKnownTarget = player.Pos;
-                Play(Sfx.Shoot);
+                Play(Sfx.Alarm);
                 Shake(0.25f, 0.15f);
                 break;
 
@@ -232,6 +234,7 @@ public partial class GameManager
             trap.Revealed = true;
             string name = GameData.TrapName(trap.Kind);
             Log(Ko ? $"{name}{Josa(name, "을", "를")} 발견했다!" : $"You spot {Loc.A(name)}!");
+            Play(Sfx.Spot);
             input.CancelRepeat();
         }
     }

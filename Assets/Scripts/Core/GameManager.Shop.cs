@@ -46,6 +46,7 @@ public partial class GameManager
     void OpenShop()
     {
         shopOpen = true;
+        Play(Sfx.ShopOpen);
         input.CancelRepeat();
         Log(Ko ? "상인: \"어서 오게! 골드만 있다면 뭐든 팔지.\"" : "Merchant: \"Welcome! If you have the gold, I have the goods.\"");
     }
@@ -53,6 +54,7 @@ public partial class GameManager
     void CloseShop()
     {
         shopOpen = false;
+        Play(Sfx.UiClose);
         Log(Ko ? "상인: \"또 오게나.\"" : "Merchant: \"Come again.\"");
     }
 
@@ -71,15 +73,15 @@ public partial class GameManager
     {
         if (index >= shopOffers.Count) return false;
         var offer = shopOffers[index];
-        if (offer.Stock <= 0) { Log(Ko ? "이미 다 팔린 물건이다." : "That item is sold out."); return false; }
-        if (gold < offer.Price) { Log(Ko ? $"골드가 부족하다. ({offer.Name} {offer.Price}G)" : $"Not enough gold. ({offer.Name} {offer.Price}G)"); return false; }
+        if (offer.Stock <= 0) { Log(Ko ? "이미 다 팔린 물건이다." : "That item is sold out."); Play(Sfx.Deny); return false; }
+        if (gold < offer.Price) { Log(Ko ? $"골드가 부족하다. ({offer.Name} {offer.Price}G)" : $"Not enough gold. ({offer.Name} {offer.Price}G)"); Play(Sfx.Deny); return false; }
 
         gold -= offer.Price;
         offer.Stock--;
         if (offer.Equipment != null)
         {
             ReceiveEquipment(offer.Equipment, bought: true, forceEquip: true);
-            Play(Sfx.Pickup);
+            Play(Sfx.Buy);
         }
         else
         {

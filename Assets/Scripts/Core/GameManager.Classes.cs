@@ -127,7 +127,7 @@ public partial class GameManager
     {
         if (metaOpen) { HandleMetaInput(cmd); return; }
         if (cmd.Kind == CommandKind.Meta) { OpenMeta(); return; }
-        if (cmd.Kind == CommandKind.Language) { Loc.Toggle(); return; }
+        if (cmd.Kind == CommandKind.Language) { Loc.Toggle(); Play(Sfx.UiMove); return; }
         if (cmd.Kind == CommandKind.UseItem && !cmd.FromPotionKey && cmd.Slot < GameData.Classes.Length)
             BeginRun(GameData.Classes[cmd.Slot].Id);
     }
@@ -157,6 +157,7 @@ public partial class GameManager
         {
             Log(Ko ? $"{playerClass.SkillName}{Josa(playerClass.SkillName, "은", "는")} {skillCooldown}턴 뒤에 쓸 수 있다."
                    : $"{playerClass.SkillName} will be ready in {skillCooldown} {(skillCooldown == 1 ? "turn" : "turns")}.");
+            Play(Sfx.Deny);
             return;
         }
 
@@ -175,11 +176,11 @@ public partial class GameManager
     bool Whirlwind()
     {
         var targets = enemies.Where(e => Pathfinder.Distance(e.Pos, player.Pos) == 1).ToList();
-        if (targets.Count == 0) { Log(Ko ? "주변에 적이 없다." : "No enemies nearby."); return false; }
+        if (targets.Count == 0) { Log(Ko ? "주변에 적이 없다." : "No enemies nearby."); Play(Sfx.Deny); return false; }
 
         Log(Ko ? $"<color=#ffaa66>회전베기!</color> 주변의 적 {targets.Count}명을 벤다."
                : $"<color=#ffaa66>Whirlwind!</color> You slash {targets.Count} nearby {(targets.Count == 1 ? "enemy" : "enemies")}.");
-        Play(Sfx.Crit);
+        Play(Sfx.Whirl);
         Shake(0.2f, 0.15f);
         Effects.Whirl(player.transform.position, playerClass.Color);
         foreach (var target in targets)
@@ -192,7 +193,7 @@ public partial class GameManager
         stealthTurns = StealthTurns + 1;
         foreach (var enemy in enemies) enemy.LastKnownTarget = null;
         player.SetAlpha(0.35f);
-        Play(Sfx.Magic);
+        Play(Sfx.Stealth);
         Log(Ko ? "<color=#99ff99>그림자 속으로 숨었다!</color> 적들이 당신을 놓쳤다."
                : "<color=#99ff99>You slip into the shadows!</color> The enemies lose track of you.");
         return true;
@@ -202,7 +203,7 @@ public partial class GameManager
     {
         var targets = enemies.Where(e => map.IsVisible(e.Pos))
             .OrderBy(e => Pathfinder.Distance(e.Pos, player.Pos)).Take(2).ToList();
-        if (targets.Count == 0) { Log(Ko ? "보이는 적이 없다." : "No enemies in sight."); return false; }
+        if (targets.Count == 0) { Log(Ko ? "보이는 적이 없다." : "No enemies in sight."); Play(Sfx.Deny); return false; }
 
         int damage = 3 + level + depth;
         Play(Sfx.Magic);
