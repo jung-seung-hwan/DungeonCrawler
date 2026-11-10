@@ -243,6 +243,8 @@ public partial class GameManager
         float raw = attacker.Attack * multiplier * 10f / (10f + defender.Defense);
         bool crit = attacker.IsPlayer && rng.NextDouble() < PlayerCrit;
         bool ambush = attacker.IsPlayer && IsHidden;
+        if (attacker.IsPlayer) raw *= DamageBoost;
+        else if (defender.IsPlayer) raw *= DamageTakenScale;
         if (crit) raw *= 2f;
         if (ambush) raw *= StealthDamageMultiplier;
         int damage = Mathf.Max(1, Mathf.RoundToInt(raw * (0.85f + (float)rng.NextDouble() * 0.3f)));
@@ -308,6 +310,7 @@ public partial class GameManager
 
         if (target.IsPlayer)
         {
+            if (TryRevive()) return;
             killerKey = sourceKey;
             OnPlayerDied(sourceName);
             return;
@@ -438,7 +441,7 @@ public partial class GameManager
 
     void GainXp(int amount)
     {
-        xp += amount;
+        xp += Mathf.RoundToInt(amount * (1f + MetaBonus(MetaUpgrade.Wisdom) / 100f));
         while (xp >= XpToNextLevel)
         {
             xp -= XpToNextLevel;

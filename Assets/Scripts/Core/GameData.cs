@@ -51,7 +51,7 @@ public class ClassDef
     public string ArtKey => Name.Ko;   // PixelArt는 한국어 이름으로 그림을 찾는다.
 }
 
-public enum MetaUpgrade { Vitality, Might, Guard, Potion, Greed }
+public enum MetaUpgrade { Vitality, Might, Guard, Potion, Greed, Mastery, Ward, Wisdom, Revive }
 
 // 영혼석으로 사는 영구 강화 한 종류.
 public class MetaUpgradeDef
@@ -124,17 +124,23 @@ public static class GameData
     // 영구 강화. 직업 선택 화면에서 영혼석으로 산다.
     public static readonly MetaUpgradeDef[] MetaUpgrades =
     {
-        new() { Id = MetaUpgrade.Vitality, Name = new("강인함", "Toughness"), Effect = new("시작 최대 체력 +{0}", "Starting max HP +{0}"), PerLevel = 4, MaxLevel = 5, BaseCost = 10 },
-        new() { Id = MetaUpgrade.Might, Name = new("날카로움", "Sharpness"), Effect = new("시작 공격력 +{0}", "Starting attack +{0}"), PerLevel = 1, MaxLevel = 3, BaseCost = 25 },
-        new() { Id = MetaUpgrade.Guard, Name = new("단단함", "Sturdiness"), Effect = new("시작 방어력 +{0}", "Starting defense +{0}"), PerLevel = 1, MaxLevel = 2, BaseCost = 40 },
-        new() { Id = MetaUpgrade.Potion, Name = new("비상 물약", "Spare Potion"), Effect = new("시작 체력 물약 +{0}", "Starting Health Potions +{0}"), PerLevel = 1, MaxLevel = 2, BaseCost = 30 },
-        new() { Id = MetaUpgrade.Greed, Name = new("황금 손", "Golden Touch"), Effect = new("골드 획득 +{0}%", "Gold gained +{0}%"), PerLevel = 10, MaxLevel = 3, BaseCost = 20 },
+        // 시작 수치: 싸고 초반에 바로 체감된다.
+        new() { Id = MetaUpgrade.Vitality, Name = new("강인함", "Toughness"), Effect = new("시작 최대 체력 +{0}", "Starting max HP +{0}"), PerLevel = 5, MaxLevel = 5, BaseCost = 8 },
+        new() { Id = MetaUpgrade.Might, Name = new("날카로움", "Sharpness"), Effect = new("시작 공격력 +{0}", "Starting attack +{0}"), PerLevel = 1, MaxLevel = 5, BaseCost = 15 },
+        new() { Id = MetaUpgrade.Guard, Name = new("단단함", "Sturdiness"), Effect = new("시작 방어력 +{0}", "Starting defense +{0}"), PerLevel = 1, MaxLevel = 3, BaseCost = 25 },
+        new() { Id = MetaUpgrade.Potion, Name = new("비상 물약", "Spare Potion"), Effect = new("시작 체력 물약 +{0}", "Starting Health Potions +{0}"), PerLevel = 1, MaxLevel = 3, BaseCost = 20 },
+        new() { Id = MetaUpgrade.Greed, Name = new("황금 손", "Golden Touch"), Effect = new("골드 획득 +{0}%", "Gold gained +{0}%"), PerLevel = 15, MaxLevel = 5, BaseCost = 12 },
+        // 비율 강화: 깊은 층에서도 장비·레벨에 묻히지 않는다.
+        new() { Id = MetaUpgrade.Mastery, Name = new("숙련", "Mastery"), Effect = new("주는 피해 +{0}%", "Damage dealt +{0}%"), PerLevel = 4, MaxLevel = 5, BaseCost = 20 },
+        new() { Id = MetaUpgrade.Ward, Name = new("수호", "Ward"), Effect = new("적에게 받는 피해 -{0}%", "Damage taken from enemies -{0}%"), PerLevel = 3, MaxLevel = 5, BaseCost = 20 },
+        new() { Id = MetaUpgrade.Wisdom, Name = new("배움", "Wisdom"), Effect = new("경험치 획득 +{0}%", "Experience gained +{0}%"), PerLevel = 10, MaxLevel = 5, BaseCost = 15 },
+        new() { Id = MetaUpgrade.Revive, Name = new("재기", "Second Wind"), Effect = new("한 판에 부활 {0}회 (체력 절반)", "Revives per run: {0} (half HP)"), PerLevel = 1, MaxLevel = 1, BaseCost = 120 },
     };
 
     public static MetaUpgradeDef MetaOf(MetaUpgrade id) => System.Array.Find(MetaUpgrades, m => m.Id == id);
 
     // 런이 끝났을 때 받는 영혼석: 내려간 층, 쓰러뜨린 보스, 처치 수.
-    public static int SoulStonesFor(int depth, int kills, int bossKills) => (depth - 1) * 2 + bossKills * 8 + kills / 8;
+    public static int SoulStonesFor(int depth, int kills, int bossKills) => (depth - 1) * 3 + bossKills * 10 + kills / 5;
 
     public static ClassDef ClassOf(PlayerClass id) => System.Array.Find(Classes, c => c.Id == id);
 
@@ -294,8 +300,9 @@ public static class GameData
         tier <= GearLinearTiers ? 0 : Mathf.RoundToInt(DeepGearScale * Mathf.Pow(tier - GearLinearTiers, DeepGearPower));
 
     // 마법 화살·화염 두루마리 피해. 깊은 층에서는 장비로 오른 공격력을 따라가서 뒤처지지 않는다(얕은 층은 예전 공식 그대로).
-    public static int MagicMissileDamage(int level, int depth, int attack) => Mathf.Max(3 + level + depth, attack * 3 / 4);
-    public static int FireScrollDamage(int level, int depth, int attack) => Mathf.Max(10 + depth * 2 + level, attack);
+    // gearAttack: 장비로 오른 공격력. 그 절반이 항상 더해져서 무기를 바꾸면 얕은 층에서도 마법 피해가 바로 오른다.
+    public static int MagicMissileDamage(int level, int depth, int attack, int gearAttack) => Mathf.Max(3 + level + depth + gearAttack / 2, attack * 3 / 4);
+    public static int FireScrollDamage(int level, int depth, int attack, int gearAttack) => Mathf.Max(10 + depth * 2 + level + gearAttack / 2, attack);
 
     // 자연 회복 한 번에 차는 체력. 최대 체력이 커지면 조금씩 늘어난다(240 미만은 1).
     public static int RegenAmount(int maxHp) => Mathf.Max(1, maxHp / 120);

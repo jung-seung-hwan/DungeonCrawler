@@ -121,6 +121,7 @@ public partial class GameManager : MonoBehaviour
         kills = 0;
         bossKills = 0;
         soulStonesEarned = 0;
+        revivesUsed = 0;
         turn = 0;
         gold = 0;
         gameOver = false;
