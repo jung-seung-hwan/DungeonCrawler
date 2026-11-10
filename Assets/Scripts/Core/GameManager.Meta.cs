@@ -17,7 +17,7 @@ public partial class GameManager
     float DamageBoost => 1f + MetaBonus(MetaUpgrade.Mastery) / 100f;
     float DamageTakenScale => 1f - MetaBonus(MetaUpgrade.Ward) / 100f;
 
-    // 재기: 쓰러지는 순간 한 판에 정해진 횟수만큼 체력 절반으로 되살아난다.
+    // 부활: 쓰러지는 순간 한 판에 정해진 횟수만큼 체력 절반으로 되살아난다.
     bool TryRevive()
     {
         if (revivesUsed >= MetaBonus(MetaUpgrade.Revive)) return false;
@@ -25,7 +25,7 @@ public partial class GameManager
         player.Hp = Mathf.Max(1, player.MaxHp / 2);
         Play(Sfx.Upgrade);
         Effects.Burst(player.transform.position, new Color(0.6f, 0.85f, 1f), 16);
-        AddFloatingText(player.transform.position, Ko ? "재기!" : "Second Wind!", new Color(0.6f, 0.85f, 1f), 1.3f);
+        AddFloatingText(player.transform.position, Ko ? "부활!" : "Revived!", new Color(0.6f, 0.85f, 1f), 1.3f);
         Log(Ko ? "<color=#99ddff>영혼석의 힘으로 다시 일어섰다!</color>" : "<color=#99ddff>The Soul Stones pull you back to your feet!</color>");
         return true;
     }
