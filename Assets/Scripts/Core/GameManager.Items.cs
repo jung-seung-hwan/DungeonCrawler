@@ -122,7 +122,7 @@ public partial class GameManager
         }
         if (target == null) { Log(Ko ? "보이는 적이 없다." : "No enemies in sight."); Play(Sfx.Deny); return false; }
 
-        int damage = Mathf.RoundToInt((10 + depth * 2 + level) * ScrollPower);
+        int damage = Mathf.RoundToInt(GameData.FireScrollDamage(level, depth, player.Attack) * ScrollPower);
         player.PlayAttack(target.Pos, 0.15f);
         Projectile.Spawn(player.Pos, target.Pos, new Color(1f, 0.5f, 0.15f), 1.5f);
         Play(Sfx.Fire);

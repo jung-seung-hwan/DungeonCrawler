@@ -96,7 +96,7 @@ public partial class GameManager
     // 런이 끝났을 때 한 번 부른다.
     void SaveRunRecord()
     {
-        if (autopilotActive) return;
+        if (IsTestRun) return;
         var data = recordsCache ??= LoadRecords();
         data.Add(new RunRecord
         {
@@ -120,7 +120,7 @@ public partial class GameManager
         string kind = key.Substring(0, colon), id = key.Substring(colon + 1);
         if (kind == "enemy")
         {
-            var template = GameData.EnemyNamed(id) ?? Array.Find(GameData.Bosses, b => b.Name == id);
+            var template = GameData.EnemyNamed(id) ?? GameData.BossNamed(id);
             return template != null ? template.DisplayName : id;
         }
         if (kind == "trap" && Enum.TryParse<TrapKind>(id, out var trap)) return Cap(GameData.TrapName(trap));

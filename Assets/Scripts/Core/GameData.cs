@@ -28,6 +28,7 @@ public class EnemyTemplate
     public int SlamRadius;           // 0보다 크면 범위 내려찍기를 예고 후 사용
     public bool Blinks;              // 멀리 있는 플레이어 옆으로 순간이동
     public bool Frenzy;              // 체력 30% 아래에서 광폭화 (2회 행동)
+    public bool SummonsShades;       // 체력 2/3, 1/3 지점에서 앞선 보스들의 그림자를 2마리씩 소환 (최종 보스)
 
     public EnemyTemplate(string name, string nameEn, int hp, int attack, int defense, int xp, int minDepth, Color color)
     {
@@ -69,6 +70,16 @@ public class MetaUpgradeDef
         string now = string.Format(Effect, currentLevel * PerLevel);
         return currentLevel >= MaxLevel ? now : $"{now}  →  {string.Format(Effect, (currentLevel + 1) * PerLevel)}";
     }
+}
+
+// 어느 층에 어떤 보스가 어떤 능력치로 나오는지.
+public struct BossSpec
+{
+    public EnemyTemplate Template;
+    public int Round;          // 0이면 첫 등장, 1 이상이면 색이 바뀐 반복 회차
+    public bool IsFinal;       // 50층 주기의 최종 보스
+    public int Hp, Attack, Defense, Xp;
+    public string DisplayName;
 }
 
 public enum ItemKind { HealthPotion, FireScroll, TeleportScroll, MapScroll, Equipment, Gold }
@@ -144,7 +155,50 @@ public static class GameData
     public static EnemyTemplate EnemyNamed(string name) => System.Array.Find(Enemies, t => t.Name == name);
     public static EnemyTemplate Skeleton => EnemyNamed("해골");
 
-    // 보스는 5층마다 등장한다. 목록을 넘어가면 마지막 보스가 더 강해져서 나온다.
+    // ───────────────────────── 몬스터 층별 강화 ─────────────────────────
+
+    // 출현 층보다 깊을수록 강해진다(체력은 제곱으로). 20층까지는 이 공식 그대로이고,
+    // 20층을 넘으면 공격력이 층마다 조금씩(0.5%), 50층을 넘으면 크게(2.5%) 추가로 커진다.
+    // 장비 성장(DeepGearBonus)이 50층까지는 거의 따라가므로 "조금씩 어려워지다가 50층 뒤로 뚜렷이 버거워지는" 곡선이 된다.
+    // 체력을 더 키우지 않는 이유: 싸움이 길어지기만 하는 것보다 한 대 한 대가 아파지는 편이 낫기 때문.
+    public const int MidStartDepth = 20;
+    public const int DeepStartDepth = 50;
+    public const float MidAttackGrowthPerFloor = 0.005f;
+    public const float DeepAttackGrowthPerFloor = 0.025f;
+
+    static float DeepFactor(int depth) =>
+        1f + Mathf.Clamp(depth - MidStartDepth, 0, DeepStartDepth - MidStartDepth) * MidAttackGrowthPerFloor
+           + Mathf.Max(0, depth - DeepStartDepth) * DeepAttackGrowthPerFloor;
+
+    public static int EnemyHp(EnemyTemplate t, int depth)
+    {
+        int bonus = depth - t.MinDepth;
+        return t.Hp + bonus * 4 + bonus * bonus / 5;
+    }
+
+    public static int EnemyAttack(EnemyTemplate t, int depth) =>
+        Mathf.RoundToInt((t.Attack + (depth - t.MinDepth) * 3 / 4) * DeepFactor(depth));
+
+    public static int EnemyDefense(EnemyTemplate t, int depth) => t.Defense + (depth - t.MinDepth) / 3;
+
+    public static int EnemyXp(EnemyTemplate t, int depth) => Mathf.RoundToInt((t.Xp + depth - t.MinDepth) * DeepFactor(depth));
+
+    // 그 층의 "튼튼한 일반 몬스터" 기준치(트롤). 반복 보스와 그림자 부하의 능력치를 여기에 맞춘다.
+    static EnemyTemplate Reference => EnemyNamed("트롤");
+    public static int ReferenceHp(int depth) => EnemyHp(Reference, Mathf.Max(depth, Reference.MinDepth));
+    public static int ReferenceAttack(int depth) => EnemyAttack(Reference, Mathf.Max(depth, Reference.MinDepth));
+    public static int ReferenceDefense(int depth) => EnemyDefense(Reference, Mathf.Max(depth, Reference.MinDepth));
+
+    // ───────────────────────── 보스 ─────────────────────────
+
+    // 보스는 5층마다 등장한다. 50층마다 최종 보스가 나오고, 그 사이 층은 아래 4종이 차례로 돌아가며 나온다.
+    // 한 바퀴 돌 때마다(회차) 색이 바뀌고 그 층 몬스터에 맞춰 강해진다.
+    public const int FinalBossInterval = 50;
+    const float VariantHpRatio = 2.2f;      // 반복 보스 체력 = 그 층 기준 몬스터 체력 × 이 값 × 보스별 비율
+    const float VariantAttackRatio = 1.2f;
+    const float ShadeHpRatio = 0.6f;        // 최종 보스가 부르는 그림자 = 그 층 기준 몬스터 × 이 값
+    const float ShadeAttackRatio = 0.9f;
+
     public static readonly EnemyTemplate[] Bosses =
     {
         new("고블린 왕", "Goblin King", 100, 10, 3, 30, 5, new Color(1f, 0.85f, 0.25f))
@@ -156,6 +210,95 @@ public static class GameData
         new("심연의 용", "Abyssal Dragon", 300, 20, 9, 200, 20, new Color(0.95f, 0.25f, 0.55f))
             { Scale = 1.9f, Range = 3, RangedVerb = new("화염 숨결", "fire breath"), SlamRadius = 2, Frenzy = true, Blinks = true },
     };
+
+    // 50층마다 나오는 최종 보스. 앞선 보스들의 패턴을 모두 쓰고, 체력 단계마다 앞선 보스의 그림자를 부른다.
+    public static readonly EnemyTemplate FinalBoss =
+        new("공허의 군주", "Void Sovereign", 1800, 58, 18, 1000, 50, new Color(0.65f, 0.35f, 1f))
+        {
+            Scale = 2f, Range = 4, RangedVerb = new("공허의 광선", "void ray"), SlamRadius = 3,
+            Frenzy = true, Blinks = true, SummonsShades = true,
+        };
+
+    public static EnemyTemplate BossNamed(string name) =>
+        name == FinalBoss.Name ? FinalBoss : System.Array.Find(Bosses, b => b.Name == name);
+
+    // 반복 회차의 이름 앞에 붙는 말. 네 회차를 다 쓰면 뒤에 숫자가 붙는다.
+    static readonly Txt[] VariantTitles =
+    {
+        new("흉포한", "Savage"), new("저주받은", "Cursed"), new("불멸의", "Undying"), new("태고의", "Ancient"),
+    };
+
+    // 회차별 색조 이동(도). 픽셀아트의 색을 이만큼 돌려서 구분한다.
+    static readonly float[] VariantHues = { 0f, 150f, 60f, 240f, 300f, 105f, 195f, 330f };
+    public static float VariantHue(int round) => VariantHues[round % VariantHues.Length];
+
+    public static bool IsFinalBossFloor(int depth) => depth % FinalBossInterval == 0;
+
+    public static BossSpec BossFor(int depth)
+    {
+        int finals = depth / FinalBossInterval;
+        var spec = new BossSpec { IsFinal = IsFinalBossFloor(depth) };
+        if (spec.IsFinal)
+        {
+            spec.Template = FinalBoss;
+            spec.Round = finals - 1;
+        }
+        else
+        {
+            int n = depth / BossFloorInterval - 1 - finals;   // 최종 보스 층을 뺀 보스 층 순번
+            spec.Template = Bosses[n % Bosses.Length];
+            spec.Round = n / Bosses.Length;
+        }
+
+        var t = spec.Template;
+        int extra = depth - t.MinDepth;
+        spec.Hp = t.Hp; spec.Attack = t.Attack;
+        spec.Defense = t.Defense + extra / 3;
+        spec.Xp = t.Xp + extra * 10;
+        spec.DisplayName = t.DisplayName;
+        if (extra <= 0) return spec;
+
+        if (spec.IsFinal)
+        {
+            // 100층, 150층…의 최종 보스는 그 층 몬스터가 강해진 만큼 함께 강해진다.
+            spec.Hp = Mathf.RoundToInt((float)t.Hp * ReferenceHp(depth) / ReferenceHp(t.MinDepth));
+            spec.Attack = Mathf.RoundToInt((float)t.Attack * ReferenceAttack(depth) / ReferenceAttack(t.MinDepth));
+        }
+        else
+        {
+            // 원래 층에서 그 보스가 얼마나 센 편이었는지(보스별 비율)를 유지한 채 그 층 기준치에 맞춘다.
+            float hpShare = t.Hp / (13f * t.MinDepth + 40f);
+            float attackShare = t.Attack / (0.67f * t.MinDepth + 7f);
+            spec.Hp = Mathf.Max(t.Hp, Mathf.RoundToInt(VariantHpRatio * hpShare * ReferenceHp(depth)));
+            spec.Attack = Mathf.Max(t.Attack, Mathf.RoundToInt(VariantAttackRatio * attackShare * ReferenceAttack(depth)));
+        }
+
+        var title = VariantTitles[(spec.Round - 1) % VariantTitles.Length];
+        int lap = (spec.Round - 1) / VariantTitles.Length;
+        spec.DisplayName = lap > 0 ? $"{title} {t.DisplayName} {lap + 1}" : $"{title} {t.DisplayName}";
+        return spec;
+    }
+
+    // 최종 보스가 부르는 그림자의 능력치(체력, 공격, 방어).
+    public static (int hp, int attack, int defense) ShadeStats(int depth) =>
+        (Mathf.RoundToInt(ReferenceHp(depth) * ShadeHpRatio), Mathf.RoundToInt(ReferenceAttack(depth) * ShadeAttackRatio), ReferenceDefense(depth));
+
+    // ───────────────────────── 장비 층별 성장 ─────────────────────────
+
+    // 장비 단계 = 층 ÷ 4 (±1). 4단계까지는 단계당 일정하게, 그 뒤로는 무기 공격력이 가파르게(1.65제곱) 좋아져서
+    // 제곱으로 느는 몬스터 체력을 조금 못 미치게 따라간다. 갑옷의 방어·체력은 단계에 비례해 끝없이 오른다.
+    // 계수는 시뮬레이션으로 맞췄다: 몬스터 하나를 잡는 데 드는 타수가 20층 약 5.5타 → 50층 약 8.5타.
+    public const int GearLinearTiers = 4;
+    const float DeepGearScale = 2.7f, DeepGearPower = 1.65f;
+    public static int DeepGearBonus(int tier) =>
+        tier <= GearLinearTiers ? 0 : Mathf.RoundToInt(DeepGearScale * Mathf.Pow(tier - GearLinearTiers, DeepGearPower));
+
+    // 마법 화살·화염 두루마리 피해. 깊은 층에서는 장비로 오른 공격력을 따라가서 뒤처지지 않는다(얕은 층은 예전 공식 그대로).
+    public static int MagicMissileDamage(int level, int depth, int attack) => Mathf.Max(3 + level + depth, attack * 3 / 4);
+    public static int FireScrollDamage(int level, int depth, int attack) => Mathf.Max(10 + depth * 2 + level, attack);
+
+    // 자연 회복 한 번에 차는 체력. 최대 체력이 커지면 조금씩 늘어난다(240 미만은 1).
+    public static int RegenAmount(int maxHp) => Mathf.Max(1, maxHp / 120);
 
     // 숫자 키 1~4에 대응하는 소모품 순서.
     public static readonly ItemKind[] Consumables =

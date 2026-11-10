@@ -131,8 +131,9 @@ public partial class GameManager
         if (cmd.Kind == CommandKind.Meta) { OpenMeta(); return; }
         if (cmd.Kind == CommandKind.Records) { OpenRecords(); return; }
         if (cmd.Kind == CommandKind.Language) { Loc.Toggle(); Play(Sfx.UiMove); return; }
+        // 실행 인자 -startdepth가 있으면 그 층에 맞게 성장한 상태로 시작한다(테스트용, 기록에 남지 않는다).
         if (cmd.Kind == CommandKind.UseItem && !cmd.FromPotionKey && cmd.Slot < GameData.Classes.Length)
-            BeginRun(GameData.Classes[cmd.Slot].Id);
+            BeginDebugRun(GameData.Classes[cmd.Slot].Id);
     }
 
     void ApplyClass(PlayerClass id)
@@ -208,7 +209,7 @@ public partial class GameManager
             .OrderBy(e => Pathfinder.Distance(e.Pos, player.Pos)).Take(2).ToList();
         if (targets.Count == 0) { Log(Ko ? "보이는 적이 없다." : "No enemies in sight."); Play(Sfx.Deny); return false; }
 
-        int damage = 3 + level + depth;
+        int damage = GameData.MagicMissileDamage(level, depth, player.Attack);
         Play(Sfx.Magic);
         player.PlayAttack(targets[0].Pos, 0.15f);
         foreach (var target in targets)

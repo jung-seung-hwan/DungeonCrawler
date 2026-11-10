@@ -80,6 +80,25 @@ public static class EquipmentFactory
         new("마력의 반지", "Arcane Ring"), new("별빛 반지", "Starlight Ring"),
     };
 
+    // 기본 이름 5단계를 넘으면 재질 이름이 붙고, 재질도 다 쓰면 "+1, +2…"가 붙는다. 이름만 봐도 단계가 보인다.
+    static readonly Txt[] DeepMaterials =
+    {
+        new("흑요석", "Obsidian"), new("용뼈", "Dragonbone"), new("달빛", "Moonlit"), new("폭풍의", "Storm"),
+        new("태양의", "Sun"), new("심연의", "Abyssal"), new("별조각", "Starshard"), new("공허의", "Void"),
+    };
+    static readonly Txt[] DeepNouns = { new("대검", "Greatsword"), new("갑옷", "Plate"), new("반지", "Ring") };
+
+    static string BaseName(EquipSlot slot, int tier)
+    {
+        var basic = slot switch { EquipSlot.Weapon => WeaponNames, EquipSlot.Armor => ArmorNames, _ => RingNames };
+        if (tier < basic.Length) return basic[tier];
+
+        int index = tier - basic.Length;
+        int plus = Mathf.Max(0, index - (DeepMaterials.Length - 1));
+        string name = $"{DeepMaterials[Mathf.Min(index, DeepMaterials.Length - 1)]} {DeepNouns[(int)slot]}";
+        return plus > 0 ? $"{name} +{plus}" : name;
+    }
+
     static readonly Affix[] WeaponAffixes = { Affix.Power, Affix.Keen, Affix.Lifesteal };
     static readonly Affix[] ArmorAffixes = { Affix.Vitality, Affix.Thorns, Affix.Regen };
     static readonly Affix[] RingAffixes = { Affix.Power, Affix.Vitality, Affix.Keen, Affix.Lifesteal, Affix.Thorns, Affix.Regen, Affix.Fortune };
@@ -89,33 +108,32 @@ public static class EquipmentFactory
         var s = slot ?? RollSlot(rng);
         var rarity = RollRarity(rng, depth);
         if (rarity < minRarity) rarity = minRarity;
-        int tier = Mathf.Clamp(depth / 4 + rng.Next(-1, 2), 0, 4);
+        // 단계는 층이 깊어지는 만큼 끝없이 오른다. 4단계를 넘으면 무기 공격력이 제곱으로 커진다(GameData.DeepGearBonus).
+        int tier = Mathf.Max(0, depth / 4 + rng.Next(-1, 2));
+        int deep = GameData.DeepGearBonus(tier);
         int rarityBonus = (int)rarity;
 
         var eq = new Equipment { Slot = s, Rarity = rarity };
         int affixCount;
         Affix[] pool;
-        string baseName;
+        string baseName = BaseName(s, tier);
 
         switch (s)
         {
             case EquipSlot.Weapon:
-                eq.Attack = 1 + tier * 2 + rng.Next(0, 2) + rarityBonus;
+                eq.Attack = 1 + tier * 2 + rng.Next(0, 2) + rarityBonus + deep;
                 affixCount = rarityBonus;
                 pool = WeaponAffixes;
-                baseName = WeaponNames[tier];
                 break;
             case EquipSlot.Armor:
                 eq.Defense = Mathf.Max(1, tier + rarityBonus);
                 eq.MaxHp = tier * 2;
                 affixCount = rarityBonus;
                 pool = ArmorAffixes;
-                baseName = ArmorNames[tier];
                 break;
             default:
                 affixCount = 1 + rarityBonus; // 반지는 기본 수치 없이 옵션만 붙는다.
                 pool = RingAffixes;
-                baseName = RingNames[tier];
                 break;
         }
 
@@ -152,7 +170,7 @@ public static class EquipmentFactory
     {
         switch (affix)
         {
-            case Affix.Power: eq.Attack += 1 + tier / 2; break;
+            case Affix.Power: eq.Attack += 1 + tier / 2 + GameData.DeepGearBonus(tier) / 6; break;
             case Affix.Vitality: eq.MaxHp += 5 + tier * 2; break;
             case Affix.Keen: eq.Crit += 0.1f; break;
             case Affix.Lifesteal: eq.Lifesteal += 0.1f; break;

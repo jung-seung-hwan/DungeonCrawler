@@ -30,7 +30,7 @@ public partial class GameManager
     // 런이 끝났을 때 한 번 부른다.
     void AwardSoulStones()
     {
-        soulStonesEarned = autopilotActive ? 0 : GameData.SoulStonesFor(depth, kills, bossKills);
+        soulStonesEarned = IsTestRun ? 0 :GameData.SoulStonesFor(depth, kills, bossKills);
         if (soulStonesEarned <= 0) return;
         PlayerPrefs.SetInt(SoulStonesKey, SoulStones + soulStonesEarned);
         PlayerPrefs.Save();
