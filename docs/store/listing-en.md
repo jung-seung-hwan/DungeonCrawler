@@ -15,16 +15,10 @@ Pick a Warrior, Rogue, or Mage to start. There is a boss every five floors.
 Dying sends you back to the start, but the soul stones you collect let you upgrade your character bit by bit.
 
 ## Features (one per line)
-- Turn-based combat where every step is a turn
-- A new dungeon on every run
-- Warrior, Rogue, and Mage, each with its own skill
-- A boss every five floors and the Void Lord on floor 50
-- Endless depths beyond the final boss
-- Common, rare, and legendary gear
-- Shops, treasure vaults, altars, and hidden traps
-- Soul stones and nine permanent upgrades that survive death
-- Per-class bests and your top ten runs
-- No account or internet required
+- A different dungeon every time
+- 3 classes: Warrior, Rogue, Mage
+- A boss every five floors
+- Plays offline
 
 ## Keywords
 roguelike, dungeon, turn-based, RPG, pixel art, dungeon crawler, single player
@@ -38,6 +32,6 @@ roguelike, dungeon, turn-based, RPG, pixel art, dungeon crawler, single player
 - 07_boss / 08_slam: When the floor turns red, move
 
 ## What's new in this version — 1.0.1
-- Fixed enemies and the player slipping past or attacking around wall corners diagonally. Diagonal steps now need both neighbouring tiles to be open.
-- Fixed held-key movement stopping for no reason.
-- A "!" now appears above your character when movement is interrupted.
+- Fixed: moving and attacking diagonally through wall corners
+- Fixed: held-key movement stopping unexpectedly
+- Added: "!" indicator when movement is interrupted
