@@ -112,7 +112,7 @@ public partial class GameManager
             specialRoomsDiscovered++;
             Log(message);
             Play(Sfx.Discover);
-            input.CancelRepeat();
+            StopHeldMove();
         }
     }
 
@@ -122,6 +122,7 @@ public partial class GameManager
     {
         map.SetTile(player.Pos, TileType.Floor);
         altarPos = null;
+        StopHeldMove();
 
         double roll = rng.NextDouble();
         Play(roll < 0.15 ? Sfx.Curse : Sfx.Bless);
@@ -134,7 +135,7 @@ public partial class GameManager
             foreach (var dir in Pathfinder.Directions8)
             {
                 var cell = player.Pos + dir;
-                if (spawned >= 2 || map.Get(cell) != TileType.Floor || IsOccupied(cell)) continue;
+                if (spawned >= 2 || !map.CanStep(player.Pos, cell) || map.Get(cell) != TileType.Floor || IsOccupied(cell)) continue;
                 var enemy = SpawnEnemy(cell);
                 enemy.LastKnownTarget = player.Pos;
                 spawned++;
@@ -176,6 +177,9 @@ public partial class GameManager
             int roomIndex = rng.Next(1, rooms.Count);
             if (roomKinds[roomIndex] == RoomKind.Shop) continue;
             if (!TryRandomFreeCell(rooms[roomIndex], out var cell)) continue;
+            // 복도와 맞닿은 방 입구 칸에는 놓지 않는다. 벽 모서리를 끼고 대각선으로 비켜 갈 수 없으므로,
+            // 그 칸의 함정은 피할 방법이 없는 길목이 된다(순간이동 함정이면 그 입구로는 영영 못 들어간다).
+            if (IsRoomEntrance(rooms[roomIndex], cell)) continue;
 
             double roll = rng.NextDouble();
             var kind = roll < 0.5 ? TrapKind.Spike : roll < 0.75 ? TrapKind.Alarm : TrapKind.Teleport;
@@ -192,6 +196,17 @@ public partial class GameManager
         }
     }
 
+    // 방 안의 칸인데 바로 옆(상하좌우)이 방 밖의 바닥(복도)인 칸.
+    bool IsRoomEntrance(RectInt room, Vector2Int cell)
+    {
+        for (int i = 0; i < 4; i++) // Directions8의 앞 네 개가 상하좌우
+        {
+            var next = cell + Pathfinder.Directions8[i];
+            if (!room.Contains(next) && map.IsWalkable(next)) return true;
+        }
+        return false;
+    }
+
     bool IsRevealedTrap(Vector2Int pos) => traps.TryGetValue(pos, out var trap) && trap.Revealed;
 
     void TriggerTrapAt(Vector2Int pos)
@@ -199,6 +214,7 @@ public partial class GameManager
         if (!traps.TryGetValue(pos, out var trap)) return;
         trap.Revealed = true;
         string name = GameData.TrapName(trap.Kind);
+        StopHeldMove(); // 어떤 함정이든 밟으면 꾹 누르던 이동을 멈춘다(순간이동 뒤 엉뚱한 곳을 계속 걷지 않게).
 
         switch (trap.Kind)
         {
@@ -235,7 +251,7 @@ public partial class GameManager
             string name = GameData.TrapName(trap.Kind);
             Log(Ko ? $"{name}{Josa(name, "을", "를")} 발견했다!" : $"You spot {Loc.A(name)}!");
             Play(Sfx.Spot);
-            input.CancelRepeat();
+            StopHeldMove();
         }
     }
 

@@ -29,4 +29,4 @@ if ($Mode -eq "shot") {
     $p = Start-Process $exe -ArgumentList "-batchmode -nographics -logFile `"$log`" $depthArgs $langArgs -simulate $Count" -PassThru
     if (-not $p.WaitForExit(600000)) { $p.Kill(); "timeout" }
 }
-Select-String -Path $log -Pattern "\[SIM\]|\[AUTOSHOT\]|\[SHOT\]|\[PERF\]|\[RECORDS\]|Exception" | ForEach-Object { $_.Line }
+Select-String -Path $log -Pattern "\[SIM\]|\[AUTOSHOT\]|\[SHOT\]|\[PERF\]|\[RECORDS\]|\[CHECK\]|Exception" | ForEach-Object { $_.Line }

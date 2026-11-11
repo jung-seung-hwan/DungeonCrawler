@@ -71,14 +71,14 @@ public partial class GameManager
             Play(Sfx.SlamWarn);
             Log(Ko ? $"<color=#ff7755>{boss.DisplayName}{Josa(boss.DisplayName, "이", "가")} 거대한 일격을 준비한다! 붉은 범위에서 벗어나라!</color>"
                    : $"<color=#ff7755>The {boss.DisplayName} winds up a massive blow! Get out of the red zone!</color>");
-            input.CancelRepeat();
+            StopHeldMove();
             return true;
         }
 
         if (t.Blinks && --boss.BlinkCooldown <= 0 && distance >= 4)
         {
             var cell = Pathfinder.Directions8.Select(d => player.Pos + d)
-                .Where(c => map.IsWalkable(c) && !IsOccupied(c))
+                .Where(c => map.CanStep(player.Pos, c) && !IsOccupied(c))
                 .OrderBy(_ => rng.Next()).FirstOrDefault();
             if (cell != default)
             {
@@ -148,9 +148,11 @@ public partial class GameManager
     int SpawnShades(Actor master, int phase)
     {
         var (hp, attack, defense) = GameData.ShadeStats(depth);
-        var cells = Pathfinder.Directions8.Select(d => master.Pos + d)
-            .Concat(Pathfinder.Directions8.Select(d => master.Pos + d * 2))
-            .Where(c => map.IsWalkable(c) && !IsOccupied(c)).ToList();
+        // 주인 옆 칸, 그다음 한 칸 더 바깥. 벽 너머(옆방·복도)에 나타나지 않도록 걸어서 닿는 칸만 고른다.
+        var near = Pathfinder.Directions8.Where(d => map.CanStep(master.Pos, master.Pos + d)).ToList();
+        var cells = near.Select(d => master.Pos + d)
+            .Concat(near.Where(d => map.CanStep(master.Pos + d, master.Pos + d * 2)).Select(d => master.Pos + d * 2))
+            .Where(c => !IsOccupied(c)).ToList();
         int first = (phase - 1) * 2 % GameData.Bosses.Length;
         int spawned = 0;
 
@@ -186,7 +188,7 @@ public partial class GameManager
         {
             if (spawned >= count) break;
             var cell = master.Pos + dir;
-            if (!map.IsWalkable(cell) || IsOccupied(cell)) continue;
+            if (!map.CanStep(master.Pos, cell) || IsOccupied(cell)) continue;
 
             var minion = Actor.FromTemplate(template, Mathf.Max(template.MinDepth, minionDepth), floorRoot);
             minion.Master = master;

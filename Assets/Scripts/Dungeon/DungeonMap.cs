@@ -78,6 +78,17 @@ public class DungeonMap
     public bool InBounds(Vector2Int p) => p.x >= 0 && p.y >= 0 && p.x < Width && p.y < Height;
     public TileType Get(Vector2Int p) => tiles[p.x, p.y];
     public bool IsWalkable(Vector2Int p) => InBounds(p) && tiles[p.x, p.y] != TileType.Wall;
+    // from에서 바로 옆 칸 to로 한 걸음 움직이거나 근접 공격을 할 수 있는지.
+    // 대각선은 양옆 두 칸이 모두 뚫려 있어야 한다 — 벽 모서리를 끼고 지나가거나 벽 너머를 때릴 수 없다.
+    // 플레이어와 몬스터가 같은 규칙을 쓴다(이동, 근접 공격, 길 찾기).
+    public bool CanStep(Vector2Int from, Vector2Int to)
+    {
+        int dx = to.x - from.x, dy = to.y - from.y;
+        if (Mathf.Max(Mathf.Abs(dx), Mathf.Abs(dy)) != 1 || !IsWalkable(to)) return false;
+        if (dx == 0 || dy == 0) return true;
+        return IsWalkable(new Vector2Int(to.x, from.y)) && IsWalkable(new Vector2Int(from.x, to.y));
+    }
+
     public bool IsVisible(Vector2Int p) => InBounds(p) && visible[p.x, p.y];
     public bool IsExplored(Vector2Int p) => InBounds(p) && explored[p.x, p.y];
 
@@ -112,8 +123,12 @@ public class DungeonMap
         {
             if ((x != a.x || y != a.y) && tiles[x, y] == TileType.Wall) return false;
             int e2 = 2 * err;
-            if (e2 >= dy) { err += dy; x += sx; }
-            if (e2 <= dx) { err += dx; y += sy; }
+            bool stepX = e2 >= dy, stepY = e2 <= dx;
+            // 대각선으로 맞닿은 두 벽 사이의 틈으로는 그 너머의 바닥이 보이지 않는다(방 구석의 벽 자체는 보인다).
+            if (stepX && stepY && tiles[x + sx, y] == TileType.Wall && tiles[x, y + sy] == TileType.Wall
+                && tiles[x + sx, y + sy] != TileType.Wall) return false;
+            if (stepX) { err += dy; x += sx; }
+            if (stepY) { err += dx; y += sy; }
         }
         return true;
     }
