@@ -197,7 +197,7 @@ public partial class GameManager
 
     bool Whirlwind()
     {
-        var targets = enemies.Where(e => Pathfinder.Distance(e.Pos, player.Pos) == 1).ToList();
+        var targets = enemies.Where(e => map.CanStep(player.Pos, e.Pos)).ToList(); // 근접 공격이 닿는 적만
         if (targets.Count == 0) { Log(Ko ? "주변에 적이 없다." : "No enemies nearby."); Play(Sfx.Deny); return false; }
 
         Log(Ko ? $"<color=#ffaa66>회전베기!</color> 주변의 적 {targets.Count}명을 벤다."
