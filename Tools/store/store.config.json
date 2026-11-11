@@ -1,0 +1,8 @@
+{
+  "_comment": "Partner Center > (your product) > Product management > Product identity. Copy the three values exactly (case, spaces, punctuation). These are not secrets - they are inside every published package.",
+  "IdentityName": "Jungsh.DungeonTamheomga",
+  "Publisher": "CN=DBC07E0C-E4E0-44BE-86F5-2CCC1C9BE29A",
+  "PublisherDisplayName": "Jungsh",
+  "DisplayName": "DungeonTamheomga",
+  "Description": "A turn-based dungeon roguelike"
+}

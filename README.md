@@ -22,6 +22,10 @@ Unity 6(6000.3.19f1)로 만든 턴제 로그라이크 던전 게임입니다. �
 > 이름을 바꾸면서 저장 위치도 `HKCU\Software\DefaultCompany\Dungeon Crawler`에서 `...\DefaultCompany\DungeonTamheomga`로 바뀌었습니다.
 > 예전 이름으로 쌓은 최고 기록·영혼석·강화·기록 화면 자료를 이어 쓰려면 게임을 끈 상태에서 한 번 복사합니다:
 > `reg copy "HKCU\Software\DefaultCompany\Dungeon Crawler" "HKCU\Software\DefaultCompany\DungeonTamheomga" /s /f`
+>
+> 스토어 출시를 앞두고 회사 이름을 `DefaultCompany`에서 `Zmark`로 바꾸면서 저장 위치가 한 번 더 바뀌었습니다: `HKCU\Software\Zmark\DungeonTamheomga`.
+> 이전 위치의 자료를 이어 쓰려면: `reg copy "HKCU\Software\DefaultCompany\DungeonTamheomga" "HKCU\Software\Zmark\DungeonTamheomga" /s /f`
+> **출시 뒤에는 회사 이름과 게임 이름을 바꾸지 않습니다**(이용자의 기록 위치가 바뀜).
 
 ## 조작법
 
@@ -168,7 +172,8 @@ Unity 6(6000.3.19f1)로 만든 턴제 로그라이크 던전 게임입니다. �
 ```
 Assets/
 ├─ Scenes/Main.unity              기본 씬 (카메라·조명만 있음)
-├─ Editor/ProjectTools.cs         씬 생성·윈도우 빌드 (메뉴 Tools/Dungeon, 배치 모드 공용)
+├─ Icon/AppIcon.png               앱 아이콘 (ProjectTools.GenerateAppIcon이 만든 결과)
+├─ Editor/ProjectTools.cs         씬 생성·윈도우 빌드·앱 아이콘 생성 (메뉴 Tools/Dungeon, 배치 모드 공용)
 └─ Scripts/
    ├─ Core/
    │  ├─ GameBootstrap.cs         Play 시 GameManager 자동 생성
@@ -238,6 +243,21 @@ Assets/
 .\Builds\Windows\DungeonTamheomga.exe -startdepth 50             # 직업을 고르면 50층(공허의 군주)에서 시작
 .\Builds\Windows\DungeonTamheomga.exe -startdepth 50 -bossonly   # 다른 몬스터 없이 보스만
 ```
+
+### Microsoft Store 출시
+
+순서와 직접 해야 하는 단계는 [docs/STORE.md](docs/STORE.md)에 있습니다. 스토어 설명 초안은 `docs/store/`에 있습니다.
+
+```powershell
+.\Tools\pack-store.ps1                     # Builds\Windows 빌드를 Builds\Store\DungeonTamheomga_<버전>_x64.msix 로 묶음
+.\Tools\pack-store.ps1 -AllowPlaceholder   # Partner Center 값을 넣기 전에 절차만 확인 (제출 불가)
+.\Tools\store-assets.ps1                   # Builds\Store\listing 에 스토어용 로고·포스터·스크린샷(한/영, 1920x1080)
+.\Tools\test.ps1 shot -Width 1920 -Height 1080   # 스크린샷 창 크기 지정 (기본 1280x720)
+```
+
+- 패키지에 넣는 게시자·제품 ID는 `Tools/store/store.config.json`에, 매니페스트 틀은 `Tools/store/AppxManifest.template.xml`에 있습니다.
+- 앱 아이콘 `Assets/Icon/AppIcon.png`도 코드로 만듭니다(`ProjectTools.GenerateAppIcon`, 유니티 메뉴 Tools → Dungeon → Generate App Icon). 빌드할 때 파일이 없으면 자동으로 만듭니다.
+- 버전은 `ProjectSettings.asset`의 `bundleVersion`이며, 스토어에 업데이트를 낼 때마다 올려야 합니다.
 
 게임 실행 파일에 직접 줄 수 있는 인자:
 
