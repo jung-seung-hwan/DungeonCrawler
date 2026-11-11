@@ -47,7 +47,7 @@ public partial class GameManager
     {
         shopOpen = true;
         Play(Sfx.ShopOpen);
-        input.CancelRepeat();
+        input.CancelRepeat(); // 가게 창이 뜨니 "!" 표시는 필요 없다.
         Log(Ko ? "상인: \"어서 오게! 골드만 있다면 뭐든 팔지.\"" : "Merchant: \"Welcome! If you have the gold, I have the goods.\"");
     }
 

@@ -32,6 +32,7 @@ public class Actor : MonoBehaviour
     public bool IsBoss;
     public bool IsMerchant;
     public Vector2Int? LastKnownTarget;
+    public int LastSeenTurn = -1;    // 플레이어 눈에 마지막으로 보인 턴. 한 번도 안 보였으면 -1.
 
     // 몬스터 행동 특성 (EnemyTemplate에서 복사)
     public EnemyTemplate Template;
@@ -129,10 +130,14 @@ public class Actor : MonoBehaviour
 
     public void SetSprite(Sprite sprite) => sr.sprite = sprite;
 
+    // 검증용: 걸어서 옮길 때마다 (누가, 어디서, 어디로)를 알려준다. 봇 플레이의 대각선 규칙 검사에서만 쓴다.
+    public static System.Action<Actor, Vector2Int, Vector2Int> Stepped;
+
     public void SetPos(Vector2Int p, bool snap = false)
     {
         if (!snap)
         {
+            Stepped?.Invoke(this, Pos, p);
             Face(p - Pos);
             hopT = 0f; // 한 칸 이동할 때 깡총 뛴다.
         }

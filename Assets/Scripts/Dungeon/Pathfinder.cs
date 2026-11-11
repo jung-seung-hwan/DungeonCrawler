@@ -25,7 +25,8 @@ public static class Pathfinder
             foreach (var dir in Directions8)
             {
                 var next = current + dir;
-                if (cameFrom.ContainsKey(next) || !map.IsWalkable(next)) continue;
+                // 벽 모서리를 끼고 가는 대각선 걸음은 길로 치지 않는다(DungeonMap.CanStep).
+                if (cameFrom.ContainsKey(next) || !map.CanStep(current, next)) continue;
 
                 bool goal = isGoal(next);
                 if (!goal && isBlocked(next)) continue;

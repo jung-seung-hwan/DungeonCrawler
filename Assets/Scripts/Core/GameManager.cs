@@ -20,6 +20,7 @@ public partial class GameManager : MonoBehaviour
     const int MapHeight = 36;
     const int FovRadius = 8;
     const int MaxLogLines = 6;
+    const int RespotQuietTurns = 3;   // 이 턴 수 안에 다시 보인 몬스터는 "나타났다" 알림·이동 멈춤을 건너뛴다.
     const string BestDepthKey = "BestDepth";
 
     readonly List<Actor> enemies = new();
@@ -69,6 +70,7 @@ public partial class GameManager : MonoBehaviour
         if (autopilotActive) return;
 
         var cmd = input.Read();
+        if (input.ConsumeStopCue()) ShowStopCue(); // 멈춘 뒤에도 이동 키를 계속 누르고 있으면 일부러 멈췄음을 알린다.
         if (HandleSoundInput(cmd)) return;
 
         if (choosingClass)
@@ -114,6 +116,7 @@ public partial class GameManager : MonoBehaviour
     {
         choosingClass = false;
         showingTitle = false;
+        input.CancelRepeat(); // 직업 선택 화면에서 누르고 있던 방향 키가 던전에서 곧바로 이동이 되지 않게 한다.
         rng = new System.Random();
         depth = 1;
         level = 1;
@@ -209,6 +212,7 @@ public partial class GameManager : MonoBehaviour
 
         var enemy = Actor.FromTemplate(candidates[index], depth, floorRoot);
         enemy.SetPos(pos, snap: true);
+        enemy.SetVisible(false); // 처음 시야에 들어올 때 RefreshVisibility가 "나타났다"로 알린다(층에 도착하자마자 보이는 경우 포함).
         enemies.Add(enemy);
         return enemy;
     }
@@ -243,6 +247,7 @@ public partial class GameManager : MonoBehaviour
             }
         }
         boss.SetPos(pos, snap: true);
+        boss.SetVisible(false);
         enemies.Add(boss);
         Log(spec.IsFinal
             ? (Ko ? "<color=#c58cff>공허가 숨을 쉰다... 이 층의 주인이 계단을 봉인하고 있다.</color>"
@@ -258,7 +263,10 @@ public partial class GameManager : MonoBehaviour
         foreach (var enemy in enemies)
         {
             bool isVisible = map.IsVisible(enemy.Pos);
-            if (isVisible && !enemy.IsShown)
+            // 모퉁이나 시야 끝에서 잠깐 가려졌다 다시 보인 몬스터는 새로 나타난 것으로 치지 않는다.
+            bool justSeen = enemy.LastSeenTurn >= 0 && turn - enemy.LastSeenTurn <= RespotQuietTurns;
+            if (isVisible) enemy.LastSeenTurn = turn;
+            if (isVisible && !enemy.IsShown && !justSeen)
             {
                 newEnemySpotted = true;
                 if (enemy.IsBoss && !bossSeen)
@@ -283,8 +291,22 @@ public partial class GameManager : MonoBehaviour
         CheckRoomDiscovery();
 
         // 새 몬스터가 보이면 꾹 누르기 이동을 멈춰서 갑자기 부딪히지 않게 한다.
-        if (newEnemySpotted) input.CancelRepeat();
+        if (newEnemySpotted) StopHeldMove();
         UpdateMinimap();
+    }
+
+    // 꾹 누르기 이동을 멈추는 곳은 모두 여기를 거친다: 새 몬스터 발견, 피해, 함정, 특수 방 발견, 제단, 계단,
+    // 보스의 내려찍기 예고(상점은 창이 뜨므로 표시 없이 멈춘다). 이동이 끊기면 머리 위에 "!"를 띄워,
+    // 키가 안 먹는 것이 아니라 일부러 멈춘 것임을 알린다. 키를 뗐다가 다시 누르면 이어서 움직인다.
+    void StopHeldMove()
+    {
+        if (input.CancelRepeat()) ShowStopCue();
+    }
+
+    void ShowStopCue()
+    {
+        if (player == null || gameOver || choosingClass || shopOpen) return;
+        AddFloatingText(player.transform.position + Vector3.up * 0.25f, "!", new Color(1f, 0.9f, 0.3f), 1.2f);
     }
 
     Actor EnemyAt(Vector2Int pos)
@@ -317,6 +339,12 @@ public partial class GameManager : MonoBehaviour
         int batchim = (last - 0xAC00) % 28;
         if (batchim == 8 && withBatchim == "으로") return withoutBatchim; // ㄹ 받침은 '로' (예: 칼로)
         return batchim != 0 ? withBatchim : withoutBatchim;
+    }
+
+    // 키를 꾹 누르면 같은 안내가 줄줄이 쌓이는 것을 막는다.
+    void LogOnce(string message)
+    {
+        if (log.Count == 0 || log[^1] != message) Log(message);
     }
 
     void Log(string message)

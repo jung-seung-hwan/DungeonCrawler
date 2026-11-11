@@ -17,6 +17,14 @@ public partial class GameManager
     {
         var target = player.Pos + dir;
 
+        // 벽 모서리를 끼고는 대각선으로 움직이거나 공격할 수 없다(몬스터도 같다). 벽에 부딪힌 것처럼 턴을 쓰지 않는다.
+        if (map.IsWalkable(target) && !map.CanStep(player.Pos, target))
+        {
+            LogOnce(Ko ? "<color=#999999>벽 모서리에 막혀 대각선으로는 지나가거나 공격할 수 없다.</color>"
+                       : "<color=#999999>A wall corner blocks the diagonal — you can't move or attack past it.</color>");
+            return;
+        }
+
         if (IsMerchantAt(target))
         {
             OpenShop();
@@ -42,9 +50,12 @@ public partial class GameManager
             var tile = map.Get(player.Pos);
             if (tile == TileType.Altar) UseAltar();
             else if (tile == TileType.Stairs)
+            {
+                if (!StairsSealed) StopHeldMove(); // 꾹 누른 채 계단을 지나치지 않게 멈춘다.
                 Log(StairsSealed
                     ? (Ko ? "계단이 봉인되어 있다. 보스를 쓰러뜨려야 한다." : "The stairs are sealed. Defeat the boss first.")
                     : (Ko ? "계단을 발견했다. F 키로 내려갈 수 있다." : "You found the stairs. Press F to descend."));
+            }
         }
         EndPlayerTurn();
     }
@@ -66,6 +77,7 @@ public partial class GameManager
         }
 
         depth++;
+        input.CancelRepeat(); // 새 층에서는 누르고 있던 이동 키를 한 번 떼었다 눌러야 움직인다.
         // 처음 계단을 내려가면 조작법은 접어 둔다(Tab으로 다시 열 수 있다).
         if (!helpAutoHidden)
         {
@@ -151,7 +163,8 @@ public partial class GameManager
             return;
         }
 
-        if (seesPlayer && distance == 1)
+        // 근접 공격은 한 걸음에 닿는 칸만 — 벽 모서리 너머 대각선으로는 때리지 못하고 돌아서 온다.
+        if (seesPlayer && map.CanStep(enemy.Pos, player.Pos))
         {
             // 원거리형은 붙으면 절반 확률로 거리를 벌린다.
             if (enemy.Kites && rng.NextDouble() < 0.5 && StepAwayFromPlayer(enemy)) return;
@@ -189,7 +202,7 @@ public partial class GameManager
 
     bool TryMove(Actor enemy, Vector2Int cell)
     {
-        if (!map.IsWalkable(cell) || IsOccupied(cell)) return false;
+        if (!map.CanStep(enemy.Pos, cell) || IsOccupied(cell)) return false;
         enemy.SetPos(cell);
         return true;
     }
@@ -206,7 +219,7 @@ public partial class GameManager
         int current = Pathfinder.Distance(enemy.Pos, player.Pos);
         var options = Pathfinder.Directions8
             .Select(dir => enemy.Pos + dir)
-            .Where(cell => map.IsWalkable(cell) && !IsOccupied(cell) && Pathfinder.Distance(cell, player.Pos) > current)
+            .Where(cell => map.CanStep(enemy.Pos, cell) && !IsOccupied(cell) && Pathfinder.Distance(cell, player.Pos) > current)
             .ToList();
         if (options.Count == 0) return false;
         enemy.SetPos(options[rng.Next(options.Count)]);
@@ -228,6 +241,7 @@ public partial class GameManager
     // animate가 false면 공격 모션을 생략한다(회전베기처럼 따로 연출하는 경우).
     void Attack(Actor attacker, Actor defender, string verb = null, float multiplier = 1f, bool quiet = false, bool animate = true)
     {
+        if (autopilotActive && verb == null) CheckMelee(attacker, defender);
         if (animate)
         {
             bool melee = verb == null;
@@ -299,7 +313,7 @@ public partial class GameManager
         {
             Play(Sfx.Hurt);
             Shake(0.15f, 0.12f);
-            input.CancelRepeat(); // 맞으면 꾹 누르던 이동을 멈춘다.
+            StopHeldMove(); // 맞으면 꾹 누르던 이동을 멈춘다.
         }
 
         if (!target.IsDead)
@@ -338,7 +352,7 @@ public partial class GameManager
             foreach (var dir in Pathfinder.Directions8.OrderBy(_ => rng.Next()))
             {
                 var cell = enemy.Pos + dir;
-                if (!map.IsWalkable(cell) || IsOccupied(cell)) continue;
+                if (!map.CanStep(enemy.Pos, cell) || IsOccupied(cell)) continue;
 
                 int half = enemy.Hp / 2;
                 enemy.Hp -= half;
